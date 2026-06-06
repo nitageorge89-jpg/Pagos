@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CrysSports · Pagos</title>
+
+<!-- PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CrysSports">
+<meta name="theme-color" content="#0d47a1">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" id="pwa-manifest">
+<link rel="apple-touch-icon" id="pwa-icon">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{min-height:100vh;background:#0d1117;font-family:'Barlow Condensed',Impact,sans-serif;color:#f0f0f0;}
+
+/* ── HEADER ── */
+header{background:linear-gradient(135deg,#1565c0,#0d47a1);padding:12px 14px 10px;border-bottom:3px solid #4fc3f7;display:flex;align-items:center;justify-content:space-between;}
+.hdr-left .sub{font-size:9px;letter-spacing:4px;color:#90caf9;font-family:'Barlow',sans-serif;}
+.hdr-left h1{font-size:22px;font-weight:800;letter-spacing:1px;line-height:1.1;}
+.save-pill{font-size:10px;font-family:'Barlow',sans-serif;color:#66bb6a;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .3s;background:#1a3a2a;padding:4px 9px;border-radius:12px;border:1px solid #66bb6a44;}
+.save-pill.on{opacity:1;}
+.save-dot{width:6px;height:6px;border-radius:50%;background:#66bb6a;}
+
+/* ── SESSION TABS ── */
+.tabs-bar{background:#161b22;border-bottom:1px solid #30363d;padding:0 12px;display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;}
+.tabs-bar::-webkit-scrollbar{display:none;}
+.tab-btn{flex-shrink:0;padding:10px 14px;font-size:13px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;color:#8b949e;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tab-btn.active{color:#4fc3f7;border-bottom-color:#4fc3f7;}
+.tab-btn:hover{color:#ccc;}
+.tab-add{flex-shrink:0;padding:8px 12px;font-size:18px;color:#8b949e;background:none;border:none;cursor:pointer;transition:color .15s;}
+.tab-add:hover{color:#66bb6a;}
+
+/* ── WRAP ── */
+.wrap{max-width:600px;margin:0 auto;padding:14px 12px 80px;}
+
+/* ── SCREENS ── */
+.screen{display:none;}
+.screen.on{display:block;}
+
+/* ── FORMS ── */
+.label{font-size:10px;color:#90caf9;margin-bottom:6px;font-family:'Barlow',sans-serif;letter-spacing:1.5px;display:block;}
+textarea{width:100%;background:#161b22;border:1.5px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-family:'Barlow',sans-serif;padding:10px 12px;resize:vertical;line-height:1.7;outline:none;transition:border-color .2s;}
+textarea:focus{border-color:#4fc3f7;}
+.btn-main{margin-top:10px;width:100%;background:#1565c0;color:#fff;font-size:16px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;padding:13px;border-radius:8px;border:none;cursor:pointer;transition:background .15s;}
+.btn-main:hover{background:#29b6f6;}
+.btn-ghost{width:100%;background:transparent;border:1.5px solid #30363d;color:#8b949e;font-size:12px;font-family:'Barlow',sans-serif;letter-spacing:1px;padding:10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-top:8px;}
+.btn-ghost:hover{border-color:#8b949e;color:#ccc;}
+.err{color:#f48fb1;font-family:'Barlow',sans-serif;font-size:11px;margin-top:6px;display:none;}
+
+/* ── RESUME BANNER ── */
+.resume-banner{background:#1a3a2a;border:1.5px solid #66bb6a44;border-radius:10px;padding:12px 14px;margin-bottom:12px;}
+.resume-title{font-size:12px;color:#66bb6a;font-family:'Barlow',sans-serif;letter-spacing:1px;margin-bottom:5px;}
+.resume-info{font-size:13px;color:#ccc;font-family:'Barlow',sans-serif;line-height:1.5;margin-bottom:10px;}
+.resume-btns{display:flex;gap:8px;}
+.rbtn-yes{flex:1;background:#1565c0;color:#fff;font-size:13px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;padding:9px;border-radius:7px;border:none;cursor:pointer;}
+.rbtn-yes:hover{background:#29b6f6;}
+.rbtn-no{flex:1;background:transparent;border:1.5px solid #30363d;color:#8b949e;font-size:12px;font-family:'Barlow',sans-serif;padding:9px;border-radius:7px;cursor:pointer;}
+
+/* ── SETUP ── */
+.setup-card{background:#161b22;border:1.5px solid #30363d;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.setup-head{padding:10px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.setup-name{font-size:16px;font-weight:800;letter-spacing:1px;color:#fff;}
+.setup-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+/* color */
+.col-btn{width:30px;height:30px;border-radius:50%;border:2px solid #30363d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:border-color .15s;}
+.col-btn.sel{border-color:#4fc3f7;border-width:3px;}
+.col-btn.w{background:#fff;color:#000;}
+.col-btn.b{background:#111;color:#fff;}
+/* side */
+.side-btn{padding:4px 10px;border-radius:6px;border:1.5px solid #30363d;background:none;font-size:11px;font-family:'Barlow',sans-serif;font-weight:700;color:#8b949e;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+.side-btn.sel-L{border-color:#4fc3f7;color:#4fc3f7;background:#4fc3f715;}
+.side-btn.sel-R{border-color:#ffb74d;color:#ffb74d;background:#ffb74d15;}
+.setup-chips{padding:5px 11px 9px;display:flex;flex-wrap:wrap;gap:4px;}
+.chip{border-radius:16px;padding:2px 9px;font-size:11px;font-family:'Barlow',sans-serif;}
+
+/* ── GLOBAL STATS ── */
+.gstats{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.gstat{flex:1;min-width:60px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:7px 8px;text-align:center;}
+.gstat-n{font-size:20px;font-weight:800;}
+.gstat-l{font-size:9px;color:#8b949e;font-family:'Barlow',sans-serif;letter-spacing:.8px;}
+.prog-box{width:100%;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 12px;}
+.prog-top{display:flex;justify-content:space-between;margin-bottom:4px;}
+.prog-top span{font-size:10px;font-family:'Barlow',sans-serif;}
+.prog-track{height:5px;background:#30363d;border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s;}
+
+/* ── SUMMARY ── */
+.summary-bar{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:9px 12px;margin-bottom:12px;}
+.sum-sec{margin-bottom:7px;}
+.sum-sec:last-child{margin-bottom:0;}
+.sum-title{font-size:9px;font-family:'Barlow',sans-serif;letter-spacing:1px;margin-bottom:4px;}
+.sum-names{display:flex;flex-wrap:wrap;gap:4px;}
+.sum-chip{border-radius:12px;padding:2px 8px;font-size:11px;font-family:'Barlow',sans-serif;}
+
+/* ── MATCH BLOCK (vertical) ── */
+.match-block{margin-bottom:16px;border:1px solid #30363d;border-radius:12px;overflow:hidden;}
+.match-hdr{background:#161b22;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #30363d;}
+.match-hdr-title{font-size:13px;font-weight:800;color:#4fc3f7;letter-spacing:1px;}
+.match-hdr-time{font-size:10px;font-family:'Barlow',sans-serif;color:#8b949e;}
+
+/* Team block vertical */
+.team-block{overflow:hidden;}
+.team-block+.team-block{border-top:2px solid #0d1117;}
+
+/* VS separator */
+.vs-sep{background:#0d1117;text-align:center;padding:6px;font-size:16px;font-weight:800;color:#4fc3f7;letter-spacing:3px;}
+
+.team-head{padding:8px 11px;display:flex;flex-direction:column;gap:4px;}
+.team-title-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.team-name{font-size:15px;font-weight:800;letter-spacing:1px;}
+.team-badge{font-size:10px;font-family:'Barlow',sans-serif;padding:2px 7px;border-radius:10px;border:1px solid;white-space:nowrap;}
+.side-tag{font-size:9px;font-family:'Barlow',sans-serif;font-weight:700;padding:2px 7px;border-radius:8px;letter-spacing:.5px;}
+.tag-L{background:#4fc3f715;border:1px solid #4fc3f755;color:#4fc3f7;}
+.tag-R{background:#ffb74d15;border:1px solid #ffb74d55;color:#ffb74d;}
+
+.team-acts{display:flex;gap:4px;flex-wrap:wrap;}
+.tact{flex:1;min-width:0;font-size:9px;font-family:'Barlow',sans-serif;padding:3px 6px;border-radius:5px;border:1px solid;cursor:pointer;background:none;white-space:nowrap;transition:opacity .15s;}
+.tact:hover{opacity:.7;}
+
+.team-players{padding:5px 8px 8px;}
+
+/* Player row */
+.p-row{display:flex;align-items:center;gap:4px;margin-bottom:4px;}
+.p-btn{display:flex;align-items:center;flex:1;padding:8px 9px;border-radius:7px;border-width:1.5px;border-style:solid;gap:7px;cursor:pointer;background:none;font-family:'Barlow',sans-serif;text-align:left;transition:transform .1s;}
+.p-btn:active{transform:scale(0.98);}
+.p-circle{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;}
+.p-name{font-size:14px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.p-badge{font-size:8px;font-family:'Barlow',sans-serif;letter-spacing:.5px;font-weight:700;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+
+/* States – dark */
+.s0 .p-btn{background:#ff000015;border-color:#ef9a9a55;color:#ffcdd2;}
+.s0 .p-circle{background:#c62828;color:#fff;}
+.s0 .p-badge{background:#ff000018;color:#ef9a9a;border:1px solid #ef9a9a44;}
+.s1 .p-btn{background:#1565c018;border-color:#64b5f655;color:#e3f2fd;}
+.s1 .p-circle{background:#1976d2;color:#fff;}
+.s1 .p-badge{background:#1565c018;color:#64b5f6;border:1px solid #64b5f655;}
+.s2 .p-btn{background:#1b5e2018;border-color:#66bb6a55;color:#e8f5e9;}
+.s2 .p-circle{background:#2e7d32;color:#fff;}
+.s2 .p-badge{background:#1b5e2018;color:#66bb6a;border:1px solid #66bb6a55;}
+
+/* States – white team */
+.wt.s0 .p-btn{background:#ffebee;border-color:#ef9a9a66;color:#c62828;}
+.wt.s0 .p-circle{background:#ef9a9a;color:#fff;}
+.wt.s0 .p-badge{background:#ffebee;color:#c62828;border:1px solid #ef9a9a66;}
+.wt.s1 .p-btn{background:#e3f2fd;border-color:#64b5f677;color:#1565c0;}
+.wt.s1 .p-circle{background:#1976d2;color:#fff;}
+.wt.s1 .p-badge{background:#e3f2fd;color:#1565c0;border:1px solid #64b5f677;}
+.wt.s2 .p-btn{background:#e8f5e9;border-color:#66bb6a66;color:#2e7d32;}
+.wt.s2 .p-circle{background:#2e7d32;color:#fff;}
+.wt.s2 .p-badge{background:#e8f5e9;color:#2e7d32;border:1px solid #66bb6a66;}
+
+/* Icon btns */
+.icon-btn{width:28px;height:28px;border-radius:50%;background:#1e2830;border:1.5px solid #30363d;color:#8b949e;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;position:relative;}
+.icon-btn:hover{background:#1565c0;border-color:#4fc3f7;color:#fff;}
+
+/* Dropdown */
+.dd{position:absolute;right:0;top:32px;background:#1e2830;border:1.5px solid #4fc3f7;border-radius:8px;z-index:300;min-width:140px;box-shadow:0 8px 24px #000000aa;overflow:hidden;}
+.dd-item{padding:10px 13px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;color:#e0e0e0;display:block;width:100%;background:none;border:none;text-align:left;transition:background .1s;}
+.dd-item:hover{background:#1565c0;color:#fff;}
+
+/* Modal */
+.modal-ov{position:fixed;inset:0;background:#00000099;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:#1e2830;border:1.5px solid #4fc3f7;border-radius:12px;padding:18px;width:100%;max-width:300px;}
+.modal-title{font-size:15px;font-weight:800;color:#4fc3f7;margin-bottom:11px;letter-spacing:1px;}
+.modal-input{width:100%;background:#0d1117;border:1.5px solid #30363d;border-radius:7px;color:#f0f0f0;font-size:16px;font-family:'Barlow',sans-serif;padding:10px 11px;outline:none;margin-bottom:10px;}
+.modal-input:focus{border-color:#4fc3f7;}
+.modal-btns{display:flex;gap:8px;}
+.modal-ok{flex:1;background:#1565c0;color:#fff;font-size:14px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;padding:10px;border-radius:7px;border:none;cursor:pointer;}
+.modal-ok:hover{background:#29b6f6;}
+.modal-cancel{flex:1;background:transparent;border:1.5px solid #30363d;color:#8b949e;font-size:12px;font-family:'Barlow',sans-serif;padding:10px;border-radius:7px;cursor:pointer;}
+
+/* Time input modal extras */
+.modal-sub{font-size:11px;color:#8b949e;font-family:'Barlow',sans-serif;margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-left">
+    <div class="sub">⚽ CRYSSPORTS</div>
+    <h1>CONTROL DE PAGOS</h1>
+  </div>
+  <div class="save-pill" id="save-pill"><div class="save-dot"></div>Guardado</div>
+</header>
+
+<!-- SESSION TABS -->
+<div class="tabs-bar" id="tabs-bar">
+  <!-- rendered by JS -->
+  <button class="tab-add" onclick="addSession()" title="Nueva sesión">＋</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modal-title">—</div>
+    <div class="modal-sub" id="modal-sub" style="display:none"></div>
+    <input class="modal-input" id="modal-input" type="text" maxlength="40"
+      onkeydown="if(event.key==='Enter')modalOk()">
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="modalOk()">GUARDAR</button>
+      <button class="modal-cancel" onclick="closeModal()">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-ov" id="confirm-modal" style="display:none" onclick="closeConfirm(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="confirm-title">¿Confirmar?</div>
+    <div class="modal-sub" id="confirm-msg" style="display:block;font-size:14px;color:#ccc;margin-bottom:14px;"></div>
+    <div class="modal-btns">
+      <button class="modal-ok" id="confirm-ok" onclick="confirmOk()">SÍ, CONFIRMAR</button>
+      <button class="modal-cancel" onclick="closeConfirm()">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- INPUT -->
+  <div class="screen on" id="screen-input">
+    <div id="resume-area"></div>
+    <label class="label">LISTA DEL PARTIDO</label>
+    <textarea id="lista" rows="13" placeholder="Equipo 1&#10;1 pepito&#10;2 andres&#10;VS&#10;Equipo 2&#10;1 mario&#10;&#10;Puedes dejar equipos vacíos si no sabes los nombres">Equipo 1
+1 pepito
+2 andres
+3 juan
+VS
+Equipo 2
+1 mario
+2 pascual
+3 geo
+VS
+Equipo 3
+1 jorge
+2 lucia
+3 tomas
+VS
+Equipo 4
+1 sara
+2 pablo
+3 marta</textarea>
+    <div class="err" id="err-input">⚠️ Pon al menos 2 equipos (separados por VS).</div>
+    <button class="btn-main" onclick="goSetup()">SIGUIENTE →</button>
+  </div>
+
+  <!-- SETUP -->
+  <div class="screen" id="screen-setup">
+    <label class="label">COLOR Y CAMPO POR EQUIPO</label>
+    <div id="setup-container"></div>
+    <div class="err" id="err-setup"></div>
+    <button class="btn-main" onclick="goMatch()">EMPEZAR →</button>
+    <button class="btn-ghost" style="border-color:#a78bfa55;color:#a78bfa;" onclick="shufflePlayers()">🔀 MEZCLAR JUGADORES AL AZAR</button>
+    <button class="btn-ghost" onclick="showScreen('input')">← VOLVER</button>
+  </div>
+
+  <!-- MATCH -->
+  <div class="screen" id="screen-match">
+    <div class="gstats">
+      <div class="gstat"><div class="gstat-n" style="color:#4fc3f7" id="g-paid">0</div><div class="gstat-l">PAGADOS</div></div>
+      <div class="gstat"><div class="gstat-n" style="color:#64b5f6" id="g-pres">0</div><div class="gstat-l">PRESENTES</div></div>
+      <div class="gstat"><div class="gstat-n" style="color:#888" id="g-abs">0</div><div class="gstat-l">AUSENTES</div></div>
+      <div class="gstat"><div class="gstat-n" style="color:#fff" id="g-total">0</div><div class="gstat-l">TOTAL</div></div>
+      <div class="prog-box">
+        <div class="prog-top"><span style="color:#8b949e">COBRADO</span><span style="color:#4fc3f7" id="g-pct">0%</span></div>
+        <div class="prog-track"><div class="prog-fill" id="g-bar" style="width:0%;background:linear-gradient(90deg,#1565c0,#4fc3f7)"></div></div>
+      </div>
+    </div>
+    <div id="summary-bar" style="display:none" class="summary-bar"></div>
+    <div id="matches-container"></div>
+    <button class="btn-ghost" onclick="showScreen('setup')">⚙ CONFIGURAR</button>
+    <button class="btn-ghost" style="margin-top:4px;border-color:#c62828;color:#ef9a9a;" onclick="finalizeSession()">✓ FINALIZAR SESIÓN</button>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ══════════════════════════════════════════
+// DATA MODEL
+// sessions = [{id, label, teams, state, matches, screen, savedAt}]
+// teams = [{name, color:'w'|'b', side:'L'|'R'|'', players:[{id,name}]}]
+// state = {playerId: 0|1|2}
+// ══════════════════════════════════════════
+
+const SAVE_KEY = 'cryssports_v6';
+let sessions = [];
+let curIdx = 0;
+let openDD = null;
+let modalCb = null;
+
+function session(){ return sessions[curIdx]; }
+function teams(){ return session().teams; }
+function st(){ return session().state; }
+
+// ── SAVE / LOAD ──
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({sessions, curIdx})); }catch(e){}
+  flash();
+}
+function loadAll(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    sessions = d.sessions || [];
+    curIdx = d.curIdx || 0;
+    if(curIdx >= sessions.length) curIdx = 0;
+    return sessions.length > 0;
+  }catch(e){ return false; }
+}
+function flash(){
+  const el = document.getElementById('save-pill');
+  el.classList.add('on');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('on'), 2000);
+}
+
+// ── SESSIONS ──
+function newSession(label){
+  return { id: Date.now(), label: label||'Partido', teams:[], state:{}, matches:[], screen:'input', savedAt: new Date().toISOString() };
+}
+
+function addSession(){
+  const label = fmtNow();
+  openModal('NOMBRE DEL PARTIDO', label, '', name=>{
+    sessions.push(newSession(name||label));
+    curIdx = sessions.length-1;
+    save();
+    renderTabs();
+    switchSession(curIdx);
+  });
+}
+
+function switchSession(idx){
+  curIdx = idx;
+  const ses = session();
+  renderTabs();
+  if(ses.screen==='match'){ renderMatch(); showScreen('match'); }
+  else if(ses.screen==='setup'){ renderSetup(); showScreen('setup'); }
+  else { showScreen('input'); }
+  save();
+}
+
+function renderTabs(){
+  const bar = document.getElementById('tabs-bar');
+  // remove old tabs
+  bar.querySelectorAll('.tab-btn').forEach(b=>b.remove());
+  const addBtn = bar.querySelector('.tab-add');
+  sessions.forEach((ses,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn'+(i===curIdx?' active':'');
+    btn.textContent = ses.label;
+    btn.onclick = ()=>switchSession(i);
+    // long press to rename
+    btn.addEventListener('contextmenu', e=>{ e.preventDefault(); renameSession(i); });
+    bar.insertBefore(btn, addBtn);
+  });
+}
+
+function renameSession(idx){
+  openModal('RENOMBRAR', sessions[idx].label, '', name=>{
+    if(name.trim()) sessions[idx].label = name.trim();
+    save(); renderTabs();
+  });
+}
+
+function finalizeSession(){
+  if(confirm('¿Finalizar "'+session().label+'"? Se eliminará de las pestañas.')){
+    sessions.splice(curIdx,1);
+    if(!sessions.length){ sessions=[newSession(fmtNow())]; }
+    curIdx=Math.min(curIdx,sessions.length-1);
+    save();renderTabs();switchSession(curIdx);
+  }
+}
+function fmtNow(){
+  const n=new Date();
+  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+
+// ── SCREENS ──
+function showScreen(name){
+  ['input','setup','match'].forEach(s=>{
+    document.getElementById('screen-'+s).classList.toggle('on', s===name);
+  });
+  if(session()) session().screen = name;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── PARSE ──
+function parseInput(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const res=[]; let cur=null; let teamNum=0;
+  for(const line of lines){
+    if(/^vs$/i.test(line)){cur=null;continue;}
+    // Is this a player line? Starts with digit+space, or is pure number
+    const isPlayer = /^\d+\s+\S/.test(line) || /^\d+$/.test(line);
+    if(!isPlayer && !cur){
+      // treat as team name/header
+      teamNum++;
+      const rawName = line.match(/^equipo\s+(.+)$/i) ? 'Equipo '+line.match(/^equipo\s+(.+)$/i)[1] : line;
+      cur={name:rawName, color:'b', side:'', players:[]};
+      res.push(cur);
+      continue;
+    }
+    if(isPlayer && !cur){
+      // player line with no team header yet — auto-name
+      teamNum++;
+      cur={name:'Equipo '+teamNum, color:'b', side:'', players:[]};
+      res.push(cur);
+    }
+    if(cur){
+      const pm = line.match(/^\d+\s+(.+)$/);
+      if(pm){ cur.players.push({id:uid(),name:pm[1]}); }
+      else if(/^\d+$/.test(line)){
+        // bare number = unnamed slot
+        cur.players.push({id:uid(),name:''});
+      } else {
+        // plain name no number
+        cur.players.push({id:uid(),name:line});
+      }
+    }
+  }
+  return res;
+}
+function buildMatches(n){ const m=[]; for(let i=0;i+1<n;i+=2) m.push([i,i+1]); return m; }
+function uid(){ return 'p'+Math.random().toString(36).slice(2,9); }
+function cap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
+
+// ── GOTO SETUP ──
+function goSetup(){
+  const text = document.getElementById('lista').value;
+  const parsed = parseInput(text);
+  if(parsed.length<2){ document.getElementById('err-input').style.display='block'; return; }
+  document.getElementById('err-input').style.display='none';
+  session().teams = parsed;
+  session().state = {};
+  session().matches = buildMatches(parsed.length);
+  renderSetup();
+  showScreen('setup');
+  save();
+}
+function goMatch(){
+  renderMatch();
+  showScreen('match');
+  save();
+}
+
+// ── SETUP RENDER ──
+function renderSetup(){
+  const c = document.getElementById('setup-container');
+  c.innerHTML='';
+  teams().forEach((team,ti)=>{
+    const card = document.createElement('div'); card.className='setup-card';
+    const head = document.createElement('div'); head.className='setup-head';
+    const nm = document.createElement('div'); nm.className='setup-name'; nm.textContent=team.name.toUpperCase();
+    const ctrl = document.createElement('div'); ctrl.className='setup-controls';
+    // color
+    ['w','b'].forEach(col=>{
+      const b=document.createElement('button');
+      b.className='col-btn '+col+(team.color===col?' sel':'');
+      b.textContent=col==='w'?'☀':'●';
+      b.onclick=()=>{teams()[ti].color=col;save();renderSetup();};
+      ctrl.appendChild(b);
+    });
+    // side
+    ['L','R'].forEach(side=>{
+      const b=document.createElement('button');
+      b.className='side-btn'+(team.side===side?' sel-'+side:'');
+      b.textContent=side==='L'?'◀ IZQ':'DER ▶';
+      b.onclick=()=>{ teams()[ti].side=(team.side===side?'':side); save(); renderSetup(); };
+      ctrl.appendChild(b);
+    });
+    head.appendChild(nm); head.appendChild(ctrl); card.appendChild(head);
+    // chips
+    const chips = document.createElement('div'); chips.className='setup-chips';
+    chips.style.background=team.color==='w'?'#f5f5f5':'#0d1117';
+    if(!team.players.length){
+      const e=document.createElement('div');e.className='chip';
+      e.style.cssText='background:#161b22;border:1px solid #30363d;color:#555;';
+      e.textContent='Sin jugadores — se añaden en partido';chips.appendChild(e);
+    } else {
+      team.players.forEach(p=>{
+        const ch=document.createElement('div');ch.className='chip';
+        ch.style.cssText=team.color==='w'?'background:#e0e0e0;border:1px solid #ccc;color:#333;':'background:#161b22;border:1px solid #30363d;color:#ccc;';
+        ch.textContent=cap(p.name)||'Plaza libre';chips.appendChild(ch);
+      });
+    }
+    card.appendChild(chips); c.appendChild(card);
+  });
+}
+
+// ── STYLE ──
+function tsty(team){
+  const w=team.color==='w';
+  return {
+    bg:w?'#fff':'#111', headBg:w?'#f0f0f0':'#1a1a1a', border:w?'#ccc':'#333',
+    accent:w?'#1565c0':'#4fc3f7', nameColor:w?'#1565c0':'#4fc3f7',
+    badgeBg:w?'#e0ecff':'#4fc3f718', badgeBorder:w?'#1565c066':'#4fc3f755',
+    markBorder:w?'#1565c055':'#4fc3f744', markTxt:w?'#1565c0':'#4fc3f7',
+    addBorder:w?'#66bb6a88':'#66bb6a55', addTxt:w?'#2e7d32':'#66bb6a',
+    isWhite:w
+  };
+}
+
+// ── MATCH RENDER ──
+function renderMatch(){
+  updateGlobal();
+  const c = document.getElementById('matches-container'); c.innerHTML='';
+  session().matches.forEach((pair,mi)=>{
+    const [iA,iB] = pair;
+    if(iA>=teams().length||iB>=teams().length) return;
+    const tA=teams()[iA], tB=teams()[iB];
+    const block = document.createElement('div'); block.className='match-block';
+    // header
+    const mh = document.createElement('div'); mh.className='match-hdr';
+    const mt = document.createElement('div'); mt.className='match-hdr-title';
+    mt.textContent=tA.name.toUpperCase()+' VS '+tB.name.toUpperCase();
+    const mtime = document.createElement('div'); mtime.className='match-hdr-time';
+    mtime.textContent='⏱ '+session().label;
+    mh.appendChild(mt); mh.appendChild(mtime); block.appendChild(mh);
+    // team A
+    block.appendChild(buildTeamBlock(iA));
+    // VS sep
+    const vs = document.createElement('div'); vs.className='vs-sep'; vs.textContent='— VS —';
+    block.appendChild(vs);
+    // team B
+    block.appendChild(buildTeamBlock(iB));
+    c.appendChild(block);
+  });
+  updateSummary();
+}
+
+function buildTeamBlock(ti){
+  const team = teams()[ti];
+  const s = tsty(team);
+  const block = document.createElement('div');
+  block.className='team-block';
+  block.id='tblock-'+ti;
+  block.style.background=s.bg;
+
+  // head
+  const head = document.createElement('div'); head.className='team-head';
+  head.style.cssText='background:'+s.headBg+';border-bottom:2px solid '+s.accent+';';
+  const titleRow = document.createElement('div'); titleRow.className='team-title-row';
+  const nm = document.createElement('div'); nm.className='team-name'; nm.style.color=s.nameColor; nm.textContent=team.name.toUpperCase()+' · '+team.players.length;
+  // side tag
+  if(team.side){
+    const tag=document.createElement('span');
+    tag.className='side-tag '+(team.side==='L'?'tag-L':'tag-R');
+    tag.textContent=team.side==='L'?'◀ IZQ':'DER ▶';
+    nm.appendChild(document.createTextNode(' ')); nm.appendChild(tag);
+  }
+  const badge=document.createElement('div');badge.className='team-badge';badge.id='badge-'+ti;
+  badge.style.cssText='color:'+s.accent+';background:'+s.badgeBg+';border-color:'+s.badgeBorder+';';
+  badge.textContent=countSt(ti,2)+'/'+team.players.length;
+  titleRow.appendChild(nm); titleRow.appendChild(badge);
+  // action buttons
+  const acts=document.createElement('div'); acts.className='team-acts';
+  const allPaid=team.players.length>0&&team.players.every(p=>st()[p.id]===2);
+  const markBtn=document.createElement('button');markBtn.className='tact';
+  markBtn.style.cssText='color:'+s.markTxt+';border-color:'+s.markBorder+';';
+  markBtn.textContent=allPaid?'✓ TODOS PAGADO':'MARCAR TODOS';
+  markBtn.id='markall-'+ti;
+  markBtn.onclick=()=>markAllPaid(ti,!allPaid);
+  const addBtn=document.createElement('button');addBtn.className='tact';
+  addBtn.style.cssText='color:'+s.addTxt+';border-color:'+s.addBorder+';';
+  addBtn.textContent='+ AÑADIR';
+  addBtn.onclick=()=>promptAdd(ti);
+  acts.appendChild(markBtn); acts.appendChild(addBtn);
+  head.appendChild(titleRow); head.appendChild(acts);
+  block.appendChild(head);
+  // players
+  const pl=document.createElement('div');pl.className='team-players';pl.id='players-'+ti;pl.style.background=s.bg;
+  // If no players: show big "team paid" button
+  if(team.players.length===0){
+    const emptyDiv=document.createElement('div');
+    emptyDiv.style.cssText='padding:10px 10px 6px;';
+    const teamPaidBtn=document.createElement('button');
+    const tpaid=session().state['__team_'+ti]===true;
+    teamPaidBtn.style.cssText='width:100%;padding:14px;border-radius:8px;border:2px solid '+(tpaid?'#2e7d32':'#444')+';background:'+(tpaid?'#1b5e2022':'#ffffff08')+';color:'+(tpaid?'#66bb6a':'#888')+';font-size:14px;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;cursor:pointer;transition:all .2s;';
+    teamPaidBtn.textContent=tpaid?'✓ EQUIPO PAGADO COMPLETO':'MARCAR EQUIPO COMO PAGADO';
+    teamPaidBtn.onclick=()=>{
+      session().state['__team_'+ti]=!tpaid;
+      refreshTeamBlock(ti);updateGlobal();updateSummary();save();
+    };
+    emptyDiv.appendChild(teamPaidBtn);
+    const addHint=document.createElement('div');
+    addHint.style.cssText='font-size:10px;color:#555;font-family:Barlow,sans-serif;text-align:center;padding:4px 0 8px;';
+    addHint.textContent='o usa + AÑADIR para agregar jugadores';
+    emptyDiv.appendChild(addHint);
+    pl.appendChild(emptyDiv);
+  } else {
+    team.players.forEach((p,pi)=>pl.appendChild(makePlayerRow(p,pi+1,ti,s)));
+  }
+  block.appendChild(pl);
+  return block;
+}
+
+function makePlayerRow(player,num,ti,s){
+  const curSt = st()[player.id]||0;
+  const row=document.createElement('div');
+  row.className='p-row s'+curSt+(s.isWhite?' wt':'');
+  row.id='prow-'+player.id;
+
+  const btn=document.createElement('button');btn.className='p-btn';
+  const circle=document.createElement('div');circle.className='p-circle';
+  circle.textContent=curSt===2?'✓':curSt===1?'●':'○';
+  if(curSt===2) btn.title='Mantén pulsado para desmarcar';
+  const name=document.createElement('div');name.className='p-name';
+  name.textContent=(num+'. ')+(player.name?cap(player.name):'Plaza '+num);
+  const badge=document.createElement('div');badge.className='p-badge';
+  badge.textContent=curSt===2?'PAGADO':curSt===1?'PRESENTE':'AUSENTE';
+  btn.appendChild(circle);btn.appendChild(name);btn.appendChild(badge);
+  (function attachPress(b, pid, teamIdx, pname){
+    let timer=null, wasLong=false;
+    function startPress(){
+      wasLong=false;
+      timer=setTimeout(()=>{
+        wasLong=true; timer=null;
+        revertState(pid,teamIdx,pname);
+      },600);
+    }
+    function endPress(){ if(timer){clearTimeout(timer);timer=null;} }
+    b.addEventListener('touchstart', startPress, {passive:true});
+    b.addEventListener('touchend', function(e){
+      endPress();
+      if(!wasLong){ e.preventDefault(); cycleState(pid,teamIdx,pname); }
+    });
+    b.addEventListener('touchcancel', endPress);
+    // Desktop mouse fallback
+    b.addEventListener('mousedown', function(e){ if(!e.isTrusted||e.button!==0) return; startPress(); });
+    b.addEventListener('mouseup',   function(e){ endPress(); if(!wasLong) cycleState(pid,teamIdx,pname); });
+    b.addEventListener('mouseleave', endPress);
+  })(btn, player.id, ti, player.name||'Plaza '+num);
+  row.appendChild(btn);
+
+  // edit
+  const editBtn=document.createElement('button');editBtn.className='icon-btn';editBtn.title='Editar nombre';editBtn.textContent='✎';
+  editBtn.onclick=(e)=>{e.stopPropagation();promptEdit(player.id,ti,player.name);};
+  row.appendChild(editBtn);
+
+  // move — show ALL other teams
+  const others=teams().filter((_,i)=>i!==ti);
+  if(others.length>0){
+    const mw=document.createElement('div');mw.style.position='relative';
+    const mb=document.createElement('button');mb.className='icon-btn';mb.title='Mover a otro equipo';mb.innerHTML='⇄';
+    mb.onclick=(e)=>{e.stopPropagation();showMoveDD(player.id,ti,others,mw);};
+    mw.appendChild(mb);row.appendChild(mw);
+  }
+  return row;
+}
+
+// ── ACTIONS ──
+function cycleState(pid,ti,playerName){
+  const cur=st()[pid]||0;
+  // If already PAID — ignore normal tap, must use long press
+  if(cur===2) return;
+  const next=cur+1; // 0->1->2 only forward
+  if(next===2){
+    openConfirm(
+      '¿CONFIRMAR PAGO?',
+      (playerName||'Este jugador')+' pasará a PAGADO.',
+      ()=>{ st()[pid]=2; refreshTeamBlock(ti);updateGlobal();updateSummary();save(); }
+    );
+  } else {
+    st()[pid]=next;
+    refreshTeamBlock(ti);updateGlobal();updateSummary();save();
+  }
+}
+function revertState(pid,ti,playerName){
+  const cur=st()[pid]||0;
+  if(cur===0) return;
+  const prev=cur-1; // one step back only
+  const label=cur===2?'PAGADO':'PRESENTE';
+  const prevLabel=prev===1?'PRESENTE':'AUSENTE';
+  openConfirm(
+    '¿QUITAR '+label+'?',
+    (playerName||'Este jugador')+' volverá a '+prevLabel+'.',
+    ()=>{ st()[pid]=prev; refreshTeamBlock(ti);updateGlobal();updateSummary();save(); }
+  );
+}
+function markAllPaid(ti,val){
+  teams()[ti].players.forEach(p=>{st()[p.id]=val?2:0;});
+  refreshTeamBlock(ti);updateGlobal();updateSummary();save();
+}
+function promptAdd(ti){
+  openModal('NUEVO JUGADOR','','Nombre (deja vacío para plaza libre)',name=>{
+    const id=uid();
+    teams()[ti].players.push({id, name:name.trim()});
+    st()[id]=0;
+    refreshTeamBlock(ti);updateGlobal();updateSummary();save();
+    // scroll to that team block
+    const el=document.getElementById('tblock-'+ti);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+}
+function promptEdit(pid,ti,current){
+  openModal('EDITAR NOMBRE',current,'',name=>{
+    const p=teams()[ti].players.find(x=>x.id===pid);
+    if(p) p.name=name.trim();
+    refreshTeamBlock(ti);save();
+  });
+}
+function movePlayer(pid,fromTi,toTi){
+  const fi=teams()[fromTi].players.findIndex(p=>p.id===pid);
+  if(fi===-1)return;
+  const [p]=teams()[fromTi].players.splice(fi,1);
+  teams()[toTi].players.push(p);
+  delete st()[p.id];
+  refreshTeamBlock(fromTi);
+  refreshTeamBlock(toTi);
+  updateGlobal();updateSummary();save();
+}
+
+function refreshTeamBlock(ti){
+  const existing=document.getElementById('tblock-'+ti);
+  if(!existing)return;
+  const s=tsty(teams()[ti]);
+  const newBlock=buildTeamBlock(ti);
+  existing.parentNode.replaceChild(newBlock,existing);
+}
+
+// ── DROPDOWN ──
+function showMoveDD(pid,fromTi,others,container){
+  if(openDD){openDD.remove();openDD=null;}
+  const dd=document.createElement('div');dd.className='dd';openDD=dd;
+  others.forEach(t=>{
+    const toTi=teams().indexOf(t);
+    const item=document.createElement('button');item.className='dd-item';
+    item.textContent='→ '+t.name;
+    item.onclick=(e)=>{e.stopPropagation();movePlayer(pid,fromTi,toTi);dd.remove();openDD=null;};
+    dd.appendChild(item);
+  });
+  container.appendChild(dd);
+  setTimeout(()=>{
+    document.addEventListener('click',function cl(){
+      if(openDD){openDD.remove();openDD=null;}
+      document.removeEventListener('click',cl);
+    });
+  },10);
+}
+
+// ── CONFIRM MODAL ──
+let confirmCb=null;
+function openConfirm(title,msg,cb){
+  confirmCb=cb;
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-modal').style.display='flex';
+}
+function confirmOk(){
+  document.getElementById('confirm-modal').style.display='none';
+  if(confirmCb){confirmCb();confirmCb=null;}
+}
+function closeConfirm(e){
+  if(!e||e.target===document.getElementById('confirm-modal')){
+    document.getElementById('confirm-modal').style.display='none';confirmCb=null;
+  }
+}
+
+// ── MODAL ──
+function openModal(title, value, sub, cb){
+  modalCb=cb;
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-input').value=value;
+  const subEl=document.getElementById('modal-sub');
+  if(sub){subEl.textContent=sub;subEl.style.display='block';}
+  else{subEl.style.display='none';}
+  document.getElementById('modal').style.display='flex';
+  setTimeout(()=>document.getElementById('modal-input').select(),80);
+}
+function modalOk(){
+  const val=document.getElementById('modal-input').value;
+  document.getElementById('modal').style.display='none';
+  if(modalCb){modalCb(val);modalCb=null;}
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal')){
+    document.getElementById('modal').style.display='none';modalCb=null;
+  }
+}
+
+// ── STATS ──
+function countSt(ti,s){ return teams()[ti].players.filter(p=>st()[p.id]===s).length; }
+function updateGlobal(){
+  const all=teams().flatMap(t=>t.players);
+  const total=all.length;
+  const paid=all.filter(p=>st()[p.id]===2).length;
+  const pres=all.filter(p=>st()[p.id]===1).length;
+  const abs=all.filter(p=>!st()[p.id]).length;
+  // Note: empty teams with __team_ flag are shown separately, not counted in totals
+  const pct=total>0?Math.round((paid/total)*100):0;
+  document.getElementById('g-paid').textContent=paid;
+  document.getElementById('g-pres').textContent=pres;
+  document.getElementById('g-abs').textContent=abs;
+  document.getElementById('g-total').textContent=total;
+  document.getElementById('g-pct').textContent=pct+'%';
+  document.getElementById('g-bar').style.width=pct+'%';
+}
+function updateSummary(){
+  const bar=document.getElementById('summary-bar');
+  const pres=teams().flatMap(t=>t.players).filter(p=>st()[p.id]===1);
+  if(!pres.length){bar.style.display='none';return;}
+  bar.style.display='block';bar.innerHTML='';
+  const sec=document.createElement('div');sec.className='sum-sec';
+  const title=document.createElement('div');title.className='sum-title';
+  title.style.color='#64b5f6';title.textContent='🔵 PRESENTES — pendiente de cobro';
+  const names=document.createElement('div');names.className='sum-names';
+  pres.forEach(p=>{
+    const ch=document.createElement('div');ch.className='sum-chip';
+    ch.style.cssText='background:#1565c018;border:1px solid #64b5f655;color:#64b5f6;';
+    ch.textContent=cap(p.name)||'Plaza';names.appendChild(ch);
+  });
+  sec.appendChild(title);sec.appendChild(names);bar.appendChild(sec);
+}
+
+// ── SHUFFLE ──
+function shufflePlayers(){
+  const ts=teams();
+  if(!ts.length) return;
+  const sizes=ts.map(t=>t.players.length);
+  const all=ts.flatMap(t=>t.players);
+  // Fisher-Yates shuffle
+  for(let i=all.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [all[i],all[j]]=[all[j],all[i]];
+  }
+  let idx=0;
+  ts.forEach((t,i)=>{ t.players=all.slice(idx,idx+sizes[i]); idx+=sizes[i]; });
+  // reset states
+  session().state={};
+  save();
+  renderSetup();
+}
+
+// ── INIT ──
+function init(){
+  const loaded = loadAll();
+  if(!loaded || !sessions.length){
+    sessions=[newSession(fmtNow())];
+    curIdx=0;
+  }
+  renderTabs();
+  const ses=session();
+  if(ses.screen==='match'){ renderMatch(); showScreen('match'); }
+  else if(ses.screen==='setup'){ renderSetup(); showScreen('setup'); }
+  else { showScreen('input'); }
+}
+
+init();
+</script>
+<script>
+// ── PWA MANIFEST + ICON (generated inline, no server needed) ──
+(function(){
+  // Generate icon as canvas -> data URL
+  const canvas = document.createElement('canvas');
+  canvas.width = 192; canvas.height = 192;
+  const ctx = canvas.getContext('2d');
+  // Background
+  const grad = ctx.createLinearGradient(0,0,192,192);
+  grad.addColorStop(0,'#1565c0'); grad.addColorStop(1,'#0d47a1');
+  ctx.fillStyle = grad;
+  roundRect(ctx, 0, 0, 192, 192, 36);
+  ctx.fill();
+  // Football emoji style — draw a simple ball
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(96, 82, 44, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#1565c0'; ctx.lineWidth = 3;
+  // pentagon lines
+  ctx.beginPath(); ctx.moveTo(96,44); ctx.lineTo(96,120); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(54,68); ctx.lineTo(138,68); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(60,114); ctx.lineTo(132,114); ctx.stroke();
+  // Text
+  ctx.fillStyle = '#4fc3f7';
+  ctx.font = 'bold 22px Barlow Condensed, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('CRYS', 96, 152);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 16px Barlow Condensed, sans-serif';
+  ctx.fillText('SPORTS', 96, 172);
+
+  const iconUrl = canvas.toDataURL('image/png');
+
+  // Set apple touch icon
+  document.getElementById('pwa-icon').href = iconUrl;
+
+  // Generate manifest blob
+  const manifest = {
+    name: 'CrysSports Pagos',
+    short_name: 'CrysSports',
+    description: 'Control de pagos para partidos',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#0d1117',
+    theme_color: '#0d47a1',
+    orientation: 'portrait',
+    icons: [
+      { src: iconUrl, sizes: '192x192', type: 'image/png' },
+      { src: iconUrl, sizes: '512x512', type: 'image/png' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  document.getElementById('pwa-manifest').href = url;
+
+  // Register service worker inline (cache the page itself)
+  if('serviceWorker' in navigator){
+    const swCode = `
+const CACHE='cryssports-v1';
+self.addEventListener('install', e=>{
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/'])));
+  self.skipWaiting();
+});
+self.addEventListener('activate', e=>{ self.clients.claim(); });
+self.addEventListener('fetch', e=>{
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+});`;
+    const swBlob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  }
+
+  function roundRect(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+  }
+})();
+</script>
+</body>
+</html>
