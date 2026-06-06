@@ -4,15 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>CrysSports · Pagos</title>
-
-<!-- PWA -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="CrysSports">
-<meta name="theme-color" content="#0d47a1">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" id="pwa-manifest">
-<link rel="apple-touch-icon" id="pwa-icon">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -130,29 +121,29 @@ textarea:focus{border-color:#4fc3f7;}
 .p-btn:active{transform:scale(0.98);}
 .p-circle{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;}
 .p-name{font-size:14px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.p-badge{font-size:8px;font-family:'Barlow',sans-serif;letter-spacing:.5px;font-weight:700;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+.p-badge{font-size:16px;line-height:1;flex-shrink:0;}
 
 /* States – dark */
 .s0 .p-btn{background:#ff000015;border-color:#ef9a9a55;color:#ffcdd2;}
 .s0 .p-circle{background:#c62828;color:#fff;}
-.s0 .p-badge{background:#ff000018;color:#ef9a9a;border:1px solid #ef9a9a44;}
+.s0 .p-badge{}
 .s1 .p-btn{background:#1565c018;border-color:#64b5f655;color:#e3f2fd;}
 .s1 .p-circle{background:#1976d2;color:#fff;}
-.s1 .p-badge{background:#1565c018;color:#64b5f6;border:1px solid #64b5f655;}
+.s1 .p-badge{}
 .s2 .p-btn{background:#1b5e2018;border-color:#66bb6a55;color:#e8f5e9;}
 .s2 .p-circle{background:#2e7d32;color:#fff;}
-.s2 .p-badge{background:#1b5e2018;color:#66bb6a;border:1px solid #66bb6a55;}
+.s2 .p-badge{}
 
 /* States – white team */
 .wt.s0 .p-btn{background:#ffebee;border-color:#ef9a9a66;color:#c62828;}
 .wt.s0 .p-circle{background:#ef9a9a;color:#fff;}
-.wt.s0 .p-badge{background:#ffebee;color:#c62828;border:1px solid #ef9a9a66;}
+.wt.s0 .p-badge{}
 .wt.s1 .p-btn{background:#e3f2fd;border-color:#64b5f677;color:#1565c0;}
 .wt.s1 .p-circle{background:#1976d2;color:#fff;}
-.wt.s1 .p-badge{background:#e3f2fd;color:#1565c0;border:1px solid #64b5f677;}
+.wt.s1 .p-badge{}
 .wt.s2 .p-btn{background:#e8f5e9;border-color:#66bb6a66;color:#2e7d32;}
 .wt.s2 .p-circle{background:#2e7d32;color:#fff;}
-.wt.s2 .p-badge{background:#e8f5e9;color:#2e7d32;border:1px solid #66bb6a66;}
+.wt.s2 .p-badge{}
 
 /* Icon btns */
 .icon-btn{width:28px;height:28px;border-radius:50%;background:#1e2830;border:1.5px solid #30363d;color:#8b949e;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;position:relative;}
@@ -577,22 +568,56 @@ function buildTeamBlock(ti){
   block.appendChild(head);
   // players
   const pl=document.createElement('div');pl.className='team-players';pl.id='players-'+ti;pl.style.background=s.bg;
-  // If no players: show big "team paid" button
+  // If no players: show rival count + big paid button
   if(team.players.length===0){
     const emptyDiv=document.createElement('div');
-    emptyDiv.style.cssText='padding:10px 10px 6px;';
-    const teamPaidBtn=document.createElement('button');
+    emptyDiv.style.cssText='padding:10px 10px 8px;';
     const tpaid=session().state['__team_'+ti]===true;
-    teamPaidBtn.style.cssText='width:100%;padding:14px;border-radius:8px;border:2px solid '+(tpaid?'#2e7d32':'#444')+';background:'+(tpaid?'#1b5e2022':'#ffffff08')+';color:'+(tpaid?'#66bb6a':'#888')+';font-size:14px;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;cursor:pointer;transition:all .2s;';
-    teamPaidBtn.textContent=tpaid?'✓ EQUIPO PAGADO COMPLETO':'MARCAR EQUIPO COMO PAGADO';
+    const rivalCount=team.rivalCount||0;
+
+    // Number of players input
+    const countRow=document.createElement('div');
+    countRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+    const countLabel=document.createElement('div');
+    countLabel.style.cssText='font-size:11px;color:#8b949e;font-family:Barlow,sans-serif;flex:1;';
+    countLabel.textContent='Nº de jugadores del equipo:';
+    const countInput=document.createElement('input');
+    countInput.type='number';countInput.min='1';countInput.max='30';
+    countInput.value=rivalCount||'';
+    countInput.placeholder='0';
+    countInput.style.cssText='width:60px;background:#0d1117;border:1.5px solid #30363d;border-radius:6px;color:#f0f0f0;font-size:16px;font-family:Barlow,sans-serif;padding:5px 8px;outline:none;text-align:center;';
+    countInput.oninput=()=>{
+      teams()[ti].rivalCount=parseInt(countInput.value)||0;
+      updateGlobal();save();
+    };
+    countRow.appendChild(countLabel);countRow.appendChild(countInput);
+    emptyDiv.appendChild(countRow);
+
+    // Big paid button
+    const teamPaidBtn=document.createElement('button');
+    teamPaidBtn.style.cssText='width:100%;padding:13px;border-radius:8px;border:2px solid '+(tpaid?'#2e7d32':'#444')+';background:'+(tpaid?'#1b5e2022':'#ffffff08')+';color:'+(tpaid?'#66bb6a':'#888')+';font-size:14px;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;cursor:pointer;transition:all .2s;';
+    const n=team.rivalCount||0;
+    teamPaidBtn.textContent=tpaid?'✓ EQUIPO PAGADO ('+(n||'?')+' jugadores)':'MARCAR EQUIPO COMO PAGADO';
     teamPaidBtn.onclick=()=>{
-      session().state['__team_'+ti]=!tpaid;
-      refreshTeamBlock(ti);updateGlobal();updateSummary();save();
+      if(!tpaid){
+        const num=teams()[ti].rivalCount||0;
+        openConfirm(
+          '¿CONFIRMAR PAGO DEL EQUIPO?',
+          'Se marcará el equipo completo como pagado'+(num?' ('+num+' jugadores)':'')+'.',
+          ()=>{ session().state['__team_'+ti]=true; refreshTeamBlock(ti);updateGlobal();updateSummary();save(); }
+        );
+      } else {
+        openConfirm(
+          '¿QUITAR PAGO DEL EQUIPO?',
+          'Se desmarcará el pago completo del equipo.',
+          ()=>{ session().state['__team_'+ti]=false; refreshTeamBlock(ti);updateGlobal();updateSummary();save(); }
+        );
+      }
     };
     emptyDiv.appendChild(teamPaidBtn);
     const addHint=document.createElement('div');
-    addHint.style.cssText='font-size:10px;color:#555;font-family:Barlow,sans-serif;text-align:center;padding:4px 0 8px;';
-    addHint.textContent='o usa + AÑADIR para agregar jugadores';
+    addHint.style.cssText='font-size:10px;color:#555;font-family:Barlow,sans-serif;text-align:center;padding:5px 0 0;';
+    addHint.textContent='o usa + AÑADIR para agregar jugadores uno a uno';
     emptyDiv.appendChild(addHint);
     pl.appendChild(emptyDiv);
   } else {
@@ -608,86 +633,168 @@ function makePlayerRow(player,num,ti,s){
   row.className='p-row s'+curSt+(s.isWhite?' wt':'');
   row.id='prow-'+player.id;
 
-  const btn=document.createElement('button');btn.className='p-btn';
-  const circle=document.createElement('div');circle.className='p-circle';
+  // ── Info bar (long press to revert) ──
+  const infoBar=document.createElement('div');
+  infoBar.className='p-btn';
+  infoBar.style.cssText='cursor:pointer;user-select:none;-webkit-user-select:none;';
+
+  const circle=document.createElement('div');
+  circle.className='p-circle';
+  circle.style.flexShrink='0';
   circle.textContent=curSt===2?'✓':curSt===1?'●':'○';
-  if(curSt===2) btn.title='Mantén pulsado para desmarcar';
-  const name=document.createElement('div');name.className='p-name';
-  name.textContent=(num+'. ')+(player.name?cap(player.name):'Plaza '+num);
-  const badge=document.createElement('div');badge.className='p-badge';
-  badge.textContent=curSt===2?'PAGADO':curSt===1?'PRESENTE':'AUSENTE';
-  btn.appendChild(circle);btn.appendChild(name);btn.appendChild(badge);
-  (function attachPress(b, pid, teamIdx, pname){
-    let timer=null, wasLong=false;
-    function startPress(){
-      wasLong=false;
-      timer=setTimeout(()=>{
-        wasLong=true; timer=null;
-        revertState(pid,teamIdx,pname);
-      },600);
-    }
-    function endPress(){ if(timer){clearTimeout(timer);timer=null;} }
-    b.addEventListener('touchstart', startPress, {passive:true});
-    b.addEventListener('touchend', function(e){
-      endPress();
-      if(!wasLong){ e.preventDefault(); cycleState(pid,teamIdx,pname); }
-    });
-    b.addEventListener('touchcancel', endPress);
-    // Desktop mouse fallback
-    b.addEventListener('mousedown', function(e){ if(!e.isTrusted||e.button!==0) return; startPress(); });
-    b.addEventListener('mouseup',   function(e){ endPress(); if(!wasLong) cycleState(pid,teamIdx,pname); });
-    b.addEventListener('mouseleave', endPress);
-  })(btn, player.id, ti, player.name||'Plaza '+num);
-  row.appendChild(btn);
 
-  // edit
-  const editBtn=document.createElement('button');editBtn.className='icon-btn';editBtn.title='Editar nombre';editBtn.textContent='✎';
-  editBtn.onclick=(e)=>{e.stopPropagation();promptEdit(player.id,ti,player.name);};
-  row.appendChild(editBtn);
+  const nameEl=document.createElement('div');
+  nameEl.className='p-name';
+  nameEl.style.cssText='flex:1;min-width:0;';
+  nameEl.textContent=(num+'. ')+(player.name?cap(player.name):'Plaza '+num);
 
-  // move — show ALL other teams
+  const badge=document.createElement('div');
+  badge.className='p-badge';
+  badge.style.flexShrink='0';
+  badge.textContent=curSt===2?'✅':curSt===1?'✋':'⏳';
+
+  infoBar.appendChild(circle);
+  infoBar.appendChild(nameEl);
+  infoBar.appendChild(badge);
+
+  // Long press → revert to absent
+  if(curSt>0){
+    let lt=null;
+    const startL=(e)=>{ lt=setTimeout(()=>{ lt=null; revertToAbsent(player.id,ti,player.name||'Plaza '+num,curSt); },700); };
+    const cancelL=()=>{ if(lt){clearTimeout(lt);lt=null;} };
+    infoBar.addEventListener('touchstart',(e)=>{ e.preventDefault(); startL(e); },{passive:false});
+    infoBar.addEventListener('touchmove', cancelL,{passive:true});
+    infoBar.addEventListener('touchend', cancelL);
+    infoBar.addEventListener('touchcancel', cancelL);
+    infoBar.addEventListener('mousedown', startL);
+    infoBar.addEventListener('mousemove', cancelL);
+    infoBar.addEventListener('mouseup', cancelL);
+    infoBar.addEventListener('mouseleave', cancelL);
+    infoBar.addEventListener('contextmenu',(e)=>e.preventDefault());
+  }
+  row.appendChild(infoBar);
+
+  // ── Action buttons row ──
+  const actRow=document.createElement('div');
+  actRow.style.cssText='display:flex;gap:3px;margin-top:3px;align-items:center;overflow-x:auto;scrollbar-width:none;';
+
+  const btnBase='padding:4px 0;border-radius:5px;border:1.5px solid;font-size:10px;font-weight:700;font-family:Barlow Condensed,sans-serif;background:none;cursor:pointer;flex:1;text-align:center;';
+
+  if(curSt===0){
+    const presBtn=document.createElement('button');
+    presBtn.style.cssText=btnBase+'border-color:#1976d2;color:#1976d2;';
+    presBtn.textContent='● PRESENTE';
+    presBtn.onclick=()=>setState(player.id,ti,1,player.name||'Plaza '+num);
+    actRow.appendChild(presBtn);
+
+    const paidBtn=document.createElement('button');
+    paidBtn.style.cssText=btnBase+'border-color:#2e7d32;color:#2e7d32;';
+    paidBtn.textContent='✓ PAGADO';
+    paidBtn.onclick=()=>setState(player.id,ti,2,player.name||'Plaza '+num);
+    actRow.appendChild(paidBtn);
+
+  } else if(curSt===1){
+    const paidBtn=document.createElement('button');
+    paidBtn.style.cssText=btnBase+'border-color:#2e7d32;color:#2e7d32;';
+    paidBtn.textContent='✓ MARCAR PAGADO';
+    paidBtn.onclick=()=>setState(player.id,ti,2,player.name||'Plaza '+num);
+    actRow.appendChild(paidBtn);
+
+  } else {
+    const spacer=document.createElement('div');
+    spacer.style.cssText='flex:1;';
+    actRow.appendChild(spacer);
+  }
+
+  const iconSty='width:24px;height:24px;border-radius:5px;border:1.5px solid #2a2a2a;color:#666;font-size:10px;background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
+
+  const editBtn=document.createElement('button');
+  editBtn.style.cssText=iconSty;
+  editBtn.textContent='✎';editBtn.title='Editar';
+  editBtn.onclick=()=>promptEdit(player.id,ti,player.name);
+  actRow.appendChild(editBtn);
+
   const others=teams().filter((_,i)=>i!==ti);
   if(others.length>0){
-    const mw=document.createElement('div');mw.style.position='relative';
-    const mb=document.createElement('button');mb.className='icon-btn';mb.title='Mover a otro equipo';mb.innerHTML='⇄';
-    mb.onclick=(e)=>{e.stopPropagation();showMoveDD(player.id,ti,others,mw);};
-    mw.appendChild(mb);row.appendChild(mw);
+    const mw=document.createElement('div');
+    mw.style.cssText='position:relative;flex-shrink:0;display:flex;';
+    const mb=document.createElement('button');
+    mb.style.cssText=iconSty;mb.innerHTML='⇄';mb.title='Mover';
+    mb.onclick=(e)=>{ e.stopPropagation(); showMoveDD(player.id,ti,others,mw); };
+    mw.appendChild(mb);actRow.appendChild(mw);
   }
+
+  const delBtn=document.createElement('button');
+  delBtn.style.cssText='width:24px;height:24px;border-radius:5px;border:1.5px solid #7f1d1d;color:#ef5350;font-size:11px;font-weight:700;background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
+  delBtn.textContent='✕';delBtn.title='Eliminar';
+  delBtn.onclick=()=>deletePlayer(player.id,ti,player.name||'Plaza '+num);
+  actRow.appendChild(delBtn);
+
+  row.appendChild(actRow);
   return row;
 }
 
 // ── ACTIONS ──
-function cycleState(pid,ti,playerName){
-  const cur=st()[pid]||0;
-  // If already PAID — ignore normal tap, must use long press
-  if(cur===2) return;
-  const next=cur+1; // 0->1->2 only forward
-  if(next===2){
+function setState(pid,ti,newSt,playerName){
+  if(newSt===2){
+    // PAGADO always needs confirmation
     openConfirm(
       '¿CONFIRMAR PAGO?',
       (playerName||'Este jugador')+' pasará a PAGADO.',
-      ()=>{ st()[pid]=2; refreshTeamBlock(ti);updateGlobal();updateSummary();save(); }
+      ()=>{ st()[pid]=2; refreshAndSort(ti); }
     );
   } else {
-    st()[pid]=next;
-    refreshTeamBlock(ti);updateGlobal();updateSummary();save();
+    // PRESENTE — instant, no confirmation
+    st()[pid]=newSt;
+    refreshAndSort(ti);
   }
 }
-function revertState(pid,ti,playerName){
-  const cur=st()[pid]||0;
-  if(cur===0) return;
-  const prev=cur-1; // one step back only
-  const label=cur===2?'PAGADO':'PRESENTE';
-  const prevLabel=prev===1?'PRESENTE':'AUSENTE';
+function revertToAbsent(pid,ti,playerName,curSt){
+  if(curSt===0) return;
+  const label=curSt===2?'PAGADO':'PRESENTE';
+  if(curSt===2){
+    // Was paid — needs confirmation
+    openConfirm(
+      '¿QUITAR PAGADO?',
+      (playerName||'Este jugador')+' volverá a AUSENTE.',
+      ()=>{ st()[pid]=0; refreshAndSort(ti); }
+    );
+  } else {
+    // Was present — instant, no confirm
+    st()[pid]=0;
+    refreshAndSort(ti);
+  }
+}
+function deletePlayer(pid,ti,playerName){
   openConfirm(
-    '¿QUITAR '+label+'?',
-    (playerName||'Este jugador')+' volverá a '+prevLabel+'.',
-    ()=>{ st()[pid]=prev; refreshTeamBlock(ti);updateGlobal();updateSummary();save(); }
+    '¿ELIMINAR JUGADOR?',
+    'Se eliminará '+(playerName||'este jugador')+' de la lista.',
+    ()=>{
+      teams()[ti].players=teams()[ti].players.filter(p=>p.id!==pid);
+      delete st()[pid];
+      refreshAndSort(ti);updateGlobal();updateSummary();save();
+    }
   );
 }
-function markAllPaid(ti,val){
-  teams()[ti].players.forEach(p=>{st()[p.id]=val?2:0;});
+function refreshAndSort(ti){
+  // Sort: absent first, present middle, paid last
+  teams()[ti].players.sort((a,b)=>(st()[a.id]||0)-(st()[b.id]||0));
   refreshTeamBlock(ti);updateGlobal();updateSummary();save();
+}
+function markAllPaid(ti,val){
+  if(val){
+    openConfirm(
+      '¿MARCAR TODOS PAGADO?',
+      'Se marcarán '+teams()[ti].players.length+' jugadores como PAGADO.',
+      ()=>{
+        teams()[ti].players.forEach(p=>{st()[p.id]=2;});
+        refreshAndSort(ti);
+      }
+    );
+  } else {
+    teams()[ti].players.forEach(p=>{st()[p.id]=0;});
+    refreshAndSort(ti);
+  }
 }
 function promptAdd(ti){
   openModal('NUEVO JUGADOR','','Nombre (deja vacío para plaza libre)',name=>{
@@ -790,11 +897,18 @@ function closeModal(e){
 function countSt(ti,s){ return teams()[ti].players.filter(p=>st()[p.id]===s).length; }
 function updateGlobal(){
   const all=teams().flatMap(t=>t.players);
-  const total=all.length;
-  const paid=all.filter(p=>st()[p.id]===2).length;
+  // Add virtual players for empty teams marked as paid
+  let extraPaid=0, extraTotal=0;
+  teams().forEach((t,ti)=>{
+    if(t.players.length===0 && st()['__team_'+ti]){
+      const n=t.rivalCount||0;
+      extraTotal+=n; extraPaid+=st()['__team_'+ti]===true?n:0;
+    }
+  });
+  const total=all.length+extraTotal;
+  const paid=all.filter(p=>st()[p.id]===2).length+extraPaid;
   const pres=all.filter(p=>st()[p.id]===1).length;
-  const abs=all.filter(p=>!st()[p.id]).length;
-  // Note: empty teams with __team_ flag are shown separately, not counted in totals
+  const abs=total-paid-pres;
   const pct=total>0?Math.round((paid/total)*100):0;
   document.getElementById('g-paid').textContent=paid;
   document.getElementById('g-pres').textContent=pres;
@@ -854,92 +968,6 @@ function init(){
 }
 
 init();
-</script>
-<script>
-// ── PWA MANIFEST + ICON (generated inline, no server needed) ──
-(function(){
-  // Generate icon as canvas -> data URL
-  const canvas = document.createElement('canvas');
-  canvas.width = 192; canvas.height = 192;
-  const ctx = canvas.getContext('2d');
-  // Background
-  const grad = ctx.createLinearGradient(0,0,192,192);
-  grad.addColorStop(0,'#1565c0'); grad.addColorStop(1,'#0d47a1');
-  ctx.fillStyle = grad;
-  roundRect(ctx, 0, 0, 192, 192, 36);
-  ctx.fill();
-  // Football emoji style — draw a simple ball
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(96, 82, 44, 0, Math.PI*2); ctx.fill();
-  ctx.strokeStyle = '#1565c0'; ctx.lineWidth = 3;
-  // pentagon lines
-  ctx.beginPath(); ctx.moveTo(96,44); ctx.lineTo(96,120); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(54,68); ctx.lineTo(138,68); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(60,114); ctx.lineTo(132,114); ctx.stroke();
-  // Text
-  ctx.fillStyle = '#4fc3f7';
-  ctx.font = 'bold 22px Barlow Condensed, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('CRYS', 96, 152);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 16px Barlow Condensed, sans-serif';
-  ctx.fillText('SPORTS', 96, 172);
-
-  const iconUrl = canvas.toDataURL('image/png');
-
-  // Set apple touch icon
-  document.getElementById('pwa-icon').href = iconUrl;
-
-  // Generate manifest blob
-  const manifest = {
-    name: 'CrysSports Pagos',
-    short_name: 'CrysSports',
-    description: 'Control de pagos para partidos',
-    start_url: '.',
-    display: 'standalone',
-    background_color: '#0d1117',
-    theme_color: '#0d47a1',
-    orientation: 'portrait',
-    icons: [
-      { src: iconUrl, sizes: '192x192', type: 'image/png' },
-      { src: iconUrl, sizes: '512x512', type: 'image/png' }
-    ]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  document.getElementById('pwa-manifest').href = url;
-
-  // Register service worker inline (cache the page itself)
-  if('serviceWorker' in navigator){
-    const swCode = `
-const CACHE='cryssports-v1';
-self.addEventListener('install', e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/'])));
-  self.skipWaiting();
-});
-self.addEventListener('activate', e=>{ self.clients.claim(); });
-self.addEventListener('fetch', e=>{
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
-});`;
-    const swBlob = new Blob([swCode], {type:'application/javascript'});
-    const swUrl = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swUrl).catch(()=>{});
-  }
-
-  function roundRect(ctx, x, y, w, h, r){
-    ctx.beginPath();
-    ctx.moveTo(x+r, y);
-    ctx.lineTo(x+w-r, y);
-    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-    ctx.lineTo(x+w, y+h-r);
-    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-    ctx.lineTo(x+r, y+h);
-    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-    ctx.lineTo(x, y+r);
-    ctx.quadraticCurveTo(x, y, x+r, y);
-    ctx.closePath();
-  }
-})();
 </script>
 </body>
 </html>
