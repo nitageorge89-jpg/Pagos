@@ -392,21 +392,18 @@ function parseInput(text){
 
   function isJunk(line){
     if(/https?:\/\//i.test(line)) return true;
-    if(/^\*.+\*$/.test(line)) return true;        // *bold* WhatsApp
+    if(/^\*.+\*$/.test(line)) return true;
     if(/^[*#_~]/.test(line)) return true;
     if(/^\d{1,2}:\d{2}/.test(line)) return true;
     if(/^[\u{1F300}-\u{1FAFF}]+$/u.test(line)) return true;
     return false;
   }
 
-  function isTeamName(line){
-    // Explicit "Equipo X" pattern
-    if(/^equipo\s+/i.test(line)) return true;
-    // Single word that is likely a team/person name after VS (set by caller)
-    return false;
+  function isExplicitTeam(line){
+    return /^eq\w*\s+/i.test(line);
   }
 
-  // First pass: collect all non-junk lines with their types
+  // First pass: clean lines
   const cleaned=[];
   for(const line of lines){
     if(isJunk(line)) continue;
@@ -419,13 +416,11 @@ function parseInput(text){
   }
 
   // Second pass: build teams
-  // Rule: an "other" line becomes a team name ONLY if:
-  //   1. It immediately precedes player lines (no other "other" lines between)
-  //   2. OR it matches explicit team pattern
-  // Otherwise ignore it
   for(let i=0;i<cleaned.length;i++){
     const item=cleaned[i];
+
     if(item.type==='vs'){ cur=null; continue; }
+
     if(item.type==='player'){
       if(!cur){
         teamNum++;
@@ -435,30 +430,35 @@ function parseInput(text){
       cur.players.push({id:uid(),name:item.name});
       continue;
     }
+
     if(item.type==='other'){
-      // Look ahead: is the very next non-other item a player?
-      let nextIsPlayer=false;
-      for(let j=i+1;j<cleaned.length;j++){
-        if(cleaned[j].type==='player'){ nextIsPlayer=true; break; }
-        if(cleaned[j].type==='vs') break;
-        if(cleaned[j].type==='other') break; // another label in between — not a team name
-      }
-      if(nextIsPlayer && isTeamName(item.line)){
-        // Use as team name
-        cur=null;
-        const rawName=item.line.match(/^equipo\s+(.+)$/i)
-          ?'Equipo '+item.line.match(/^equipo\s+(.+)$/i)[1]:item.line;
-        cur={name:rawName,color:'b',side:'',players:[]};
+      cur=null;
+      if(isExplicitTeam(item.line)){
+        // Always create explicit teams even if empty
+        const m=item.line.match(/^eq\w*\s+(.+)$/i);
+        const rawName=m?'Equipo '+m[1]:item.line;
         teamNum++;
+        cur={name:rawName,color:'b',side:'',players:[],_explicit:true};
         res.push(cur);
       } else {
-        // Ignore — it's location/date/other info
-        // But reset cur so next players start a new team
-        cur=null;
+        // Non-explicit: only use as team name if next item is a player
+        let nextIsPlayer=false;
+        for(let j=i+1;j<cleaned.length;j++){
+          if(cleaned[j].type==='player'){ nextIsPlayer=true; break; }
+          if(cleaned[j].type==='vs'||cleaned[j].type==='other') break;
+        }
+        if(nextIsPlayer){
+          teamNum++;
+          cur={name:item.line,color:'b',side:'',players:[]};
+          res.push(cur);
+        }
+        // else: ignore (location, field name, etc.)
       }
     }
   }
-  return res.filter(t=>t.players.length>0);
+
+  // Keep explicit teams even if empty, remove non-explicit empty ones
+  return res.filter(t=>t.players.length>0||t._explicit);
 }
 
 function buildMatches(n){ const m=[]; for(let i=0;i+1<n;i+=2) m.push([i,i+1]); return m; }
