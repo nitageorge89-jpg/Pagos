@@ -246,7 +246,7 @@ textarea:focus{border-color:#4fc3f7;}
   <div class="screen" id="screen-match">
     <div class="gstats" style="flex-wrap:nowrap;">
       <div class="gstat"><div class="gstat-n" style="color:#66bb6a" id="g-paid">0</div><div class="gstat-l">PAGADOS</div></div>
-      <div class="gstat"><div class="gstat-n" style="color:#64b5f6" id="g-pres">0</div><div class="gstat-l">PRESENTES</div></div>
+      <div class="gstat"><div class="gstat-n" style="color:#a78bfa" id="g-free">0</div><div class="gstat-l">GRATIS</div></div>
       <div class="gstat"><div class="gstat-n" style="color:#ef5350" id="g-abs">0</div><div class="gstat-l">PENDIENTES</div></div>
       <div class="gstat"><div class="gstat-n" style="color:#fff" id="g-total">0</div><div class="gstat-l">TOTAL</div></div>
     </div>
@@ -254,7 +254,8 @@ textarea:focus{border-color:#4fc3f7;}
     <div id="matches-container"></div>
     <button class="btn-ghost" onclick="showScreen('setup')">⚙ CONFIGURAR</button>
     <button class="btn-ghost" style="margin-top:4px;border-color:#ffb74d;color:#ffb74d;" onclick="showScreen('debts')">📋 HISTORIAL DE DEUDAS</button>
-    <button class="btn-ghost" style="margin-top:4px;border-color:#c62828;color:#ef9a9a;" onclick="finalizeSession()">✓ FINALIZAR SESIÓN</button>
+    <button class="btn-ghost" style="margin-top:4px;border-color:#c62828;color:#ef9a9a;" onclick="finalizeSession()">✓ FINALIZAR — guardar deudas</button>
+    <button class="btn-ghost" style="margin-top:4px;border-color:#555;color:#888;" onclick="deleteSession()">🗑 ELIMINAR PARTIDO sin guardar</button>
   </div>
 
   <!-- DEBTS -->
@@ -358,6 +359,18 @@ function renameSession(idx){
   });
 }
 
+function deleteSession(){
+  openConfirm(
+    "ELIMINAR PARTIDO",
+    "Se eliminara el partido sin guardar nada en deudas.",
+    ()=>{
+      sessions.splice(curIdx,1);
+      if(!sessions.length){ sessions=[newSession(fmtNow())]; }
+      curIdx=Math.min(curIdx,sessions.length-1);
+      save();renderTabs();switchSession(curIdx);
+    }
+  );
+}
 function finalizeSession(){
   openConfirm(
     "FINALIZAR SESION",
@@ -1067,8 +1080,7 @@ function updateGlobal(){
   });
   const total=all.length+extraTotal;
   const paid=all.filter(p=>st()[p.id]===2).length+extraPaid;
-  // extraFree counted separately
-  const free=all.filter(p=>st()[p.id]===3).length;
+  const free=all.filter(p=>st()[p.id]===3).length+extraFree;
   const pres=all.filter(p=>st()[p.id]===1).length;
   const abs=total-paid-free-pres;
   document.getElementById('g-paid').textContent=paid;
