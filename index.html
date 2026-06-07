@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{min-height:100vh;background:#0d1117;font-family:'Barlow Condensed',Impact,sans-serif;color:#f0f0f0;}
+body{min-height:100vh;background:#1a1f2e;font-family:'Barlow Condensed',Impact,sans-serif;color:#f0f0f0;}
 
 /* ── HEADER ── */
 header{background:linear-gradient(135deg,#1565c0,#0d47a1);padding:12px 14px 10px;border-bottom:3px solid #4fc3f7;display:flex;align-items:center;justify-content:space-between;}
@@ -15,15 +15,15 @@ header{background:linear-gradient(135deg,#1565c0,#0d47a1);padding:12px 14px 10px
 .hdr-left h1{font-size:22px;font-weight:800;letter-spacing:1px;line-height:1.1;}
 .save-pill{font-size:10px;font-family:'Barlow',sans-serif;color:#66bb6a;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .3s;background:#1a3a2a;padding:4px 9px;border-radius:12px;border:1px solid #66bb6a44;}
 .save-pill.on{opacity:1;}
-.mu-pair{display:flex;align-items:center;gap:6px;margin-bottom:8px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;}
-.mu-select{flex:1;background:#0d1117;border:1.5px solid #30363d;border-radius:6px;color:#f0f0f0;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:6px 4px;outline:none;cursor:pointer;}
+.mu-pair{display:flex;align-items:center;gap:6px;margin-bottom:8px;background:#222836;border:1px solid #2d3548;border-radius:8px;padding:8px 10px;}
+.mu-select{flex:1;background:#141824;border:1.5px solid #2d3548;border-radius:6px;color:#f0f0f0;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:6px 4px;outline:none;cursor:pointer;}
 .mu-vs{font-size:14px;font-weight:800;color:#4fc3f7;flex-shrink:0;padding:0 2px;}
 .mu-remove{width:26px;height:26px;border-radius:5px;border:1.5px solid #c62828;color:#ef5350;font-size:12px;background:none;cursor:pointer;flex-shrink:0;}
 .mu-add{width:100%;margin-top:4px;padding:8px;border-radius:7px;border:1.5px solid #66bb6a55;color:#66bb6a;font-size:12px;font-family:'Barlow',sans-serif;background:none;cursor:pointer;letter-spacing:1px;}
 .save-dot{width:6px;height:6px;border-radius:50%;background:#66bb6a;}
 
 /* ── SESSION TABS ── */
-.tabs-bar{background:#161b22;border-bottom:1px solid #30363d;padding:0 12px;display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;}
+.tabs-bar{background:#222836;border-bottom:1px solid #2d3548;padding:0 12px;display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;}
 .tabs-bar::-webkit-scrollbar{display:none;}
 .tab-btn{flex-shrink:0;padding:10px 14px;font-size:13px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;color:#8b949e;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .tab-btn.active{color:#4fc3f7;border-bottom-color:#4fc3f7;}
@@ -40,7 +40,7 @@ header{background:linear-gradient(135deg,#1565c0,#0d47a1);padding:12px 14px 10px
 
 /* ── FORMS ── */
 .label{font-size:10px;color:#90caf9;margin-bottom:6px;font-family:'Barlow',sans-serif;letter-spacing:1.5px;display:block;}
-textarea{width:100%;background:#161b22;border:1.5px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-family:'Barlow',sans-serif;padding:10px 12px;resize:vertical;line-height:1.7;outline:none;transition:border-color .2s;}
+textarea{width:100%;background:#222836;border:1.5px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-family:'Barlow',sans-serif;padding:10px 12px;resize:vertical;line-height:1.7;outline:none;transition:border-color .2s;}
 textarea:focus{border-color:#4fc3f7;}
 .btn-main{margin-top:10px;width:100%;background:#1565c0;color:#fff;font-size:16px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;padding:13px;border-radius:8px;border:none;cursor:pointer;transition:background .15s;}
 .btn-main:hover{background:#29b6f6;}
@@ -58,7 +58,7 @@ textarea:focus{border-color:#4fc3f7;}
 .rbtn-no{flex:1;background:transparent;border:1.5px solid #30363d;color:#8b949e;font-size:12px;font-family:'Barlow',sans-serif;padding:9px;border-radius:7px;cursor:pointer;}
 
 /* ── SETUP ── */
-.setup-card{background:#161b22;border:1.5px solid #30363d;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.setup-card{background:#222836;border:1.5px solid #2d3548;border-radius:10px;margin-bottom:10px;overflow:hidden;}
 .setup-head{padding:10px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .setup-name{font-size:16px;font-weight:800;letter-spacing:1px;color:#fff;}
 .setup-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
@@ -68,7 +68,7 @@ textarea:focus{border-color:#4fc3f7;}
 .col-btn.w{background:#fff;color:#000;}
 .col-btn.b{background:#111;color:#fff;}
 /* side */
-.side-btn{padding:4px 10px;border-radius:6px;border:1.5px solid #30363d;background:none;font-size:11px;font-family:'Barlow',sans-serif;font-weight:700;color:#8b949e;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+.side-btn{padding:7px 16px;border-radius:8px;border:2px solid #30363d;background:none;font-size:15px;font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#8b949e;cursor:pointer;transition:all .15s;letter-spacing:1px;}
 .side-btn.sel-L{border-color:#4fc3f7;color:#4fc3f7;background:#4fc3f715;}
 .side-btn.sel-R{border-color:#ffb74d;color:#ffb74d;background:#ffb74d15;}
 .setup-chips{padding:5px 11px 9px;display:flex;flex-wrap:wrap;gap:4px;}
@@ -79,7 +79,7 @@ textarea:focus{border-color:#4fc3f7;}
 .gstat{flex:1;min-width:60px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:7px 8px;text-align:center;}
 .gstat-n{font-size:20px;font-weight:800;}
 .gstat-l{font-size:9px;color:#8b949e;font-family:'Barlow',sans-serif;letter-spacing:.8px;}
-.prog-box{width:100%;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 12px;}
+.prog-box{width:100%;background:#222836;border:1px solid #2d3548;border-radius:8px;padding:8px 12px;}
 .prog-top{display:flex;justify-content:space-between;margin-bottom:4px;}
 .prog-top span{font-size:10px;font-family:'Barlow',sans-serif;}
 .prog-track{height:5px;background:#30363d;border-radius:3px;overflow:hidden;}
@@ -94,8 +94,8 @@ textarea:focus{border-color:#4fc3f7;}
 .sum-chip{border-radius:12px;padding:2px 8px;font-size:11px;font-family:'Barlow',sans-serif;}
 
 /* ── MATCH BLOCK (vertical) ── */
-.match-block{margin-bottom:16px;border:1px solid #30363d;border-radius:12px;overflow:hidden;}
-.match-hdr{background:#161b22;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #30363d;}
+.match-block{margin-bottom:16px;border:1px solid #2d3548;border-radius:12px;overflow:hidden;}
+.match-hdr{background:#222836;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2d3548;}
 .match-hdr-title{font-size:13px;font-weight:800;color:#4fc3f7;letter-spacing:1px;}
 .match-hdr-time{font-size:10px;font-family:'Barlow',sans-serif;color:#8b949e;}
 
@@ -136,6 +136,11 @@ textarea:focus{border-color:#4fc3f7;}
 .s1 .p-circle{background:#1976d2;color:#fff;}
 .s1 .p-badge{}
 .s2 .p-btn{background:#1b5e2018;border-color:#66bb6a55;color:#e8f5e9;}
+.sfree .p-btn{background:#7c3aed18;border-color:#7c3aed55;color:#ede9fe;}
+.sfree .p-circle{background:#7c3aed;color:#fff;}
+.wt.sfree .p-btn{background:#ede9fe;border-color:#7c3aed88;color:#3b0764;}
+.wt.sfree .p-circle{background:#7c3aed;color:#fff;}
+.wt.sfree .p-name{color:#3b0764 !important;font-weight:700;}
 .s2 .p-circle{background:#2e7d32;color:#fff;}
 .s2 .p-badge{}
 
@@ -151,19 +156,19 @@ textarea:focus{border-color:#4fc3f7;}
 .wt.s2 .p-badge{}
 
 /* Icon btns */
-.icon-btn{width:28px;height:28px;border-radius:50%;background:#1e2830;border:1.5px solid #30363d;color:#8b949e;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;position:relative;}
+.icon-btn{width:28px;height:28px;border-radius:50%;background:#222836;border:1.5px solid #30363d;color:#8b949e;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;position:relative;}
 .icon-btn:hover{background:#1565c0;border-color:#4fc3f7;color:#fff;}
 
 /* Dropdown */
-.dd{position:fixed;background:#1e2830;border:1.5px solid #4fc3f7;border-radius:8px;z-index:999;min-width:160px;box-shadow:0 8px 32px #000000cc;overflow:hidden;}
+.dd{position:fixed;background:#222836;border:1.5px solid #4fc3f7;border-radius:8px;z-index:999;min-width:160px;box-shadow:0 8px 32px #000000cc;overflow:hidden;}
 .dd-item{padding:10px 13px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;color:#e0e0e0;display:block;width:100%;background:none;border:none;text-align:left;transition:background .1s;}
 .dd-item:hover{background:#1565c0;color:#fff;}
 
 /* Modal */
 .modal-ov{position:fixed;inset:0;background:#00000099;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal-box{background:#1e2830;border:1.5px solid #4fc3f7;border-radius:12px;padding:18px;width:100%;max-width:300px;}
+.modal-box{background:#222836;border:1.5px solid #4fc3f7;border-radius:12px;padding:18px;width:100%;max-width:300px;}
 .modal-title{font-size:15px;font-weight:800;color:#4fc3f7;margin-bottom:11px;letter-spacing:1px;}
-.modal-input{width:100%;background:#0d1117;border:1.5px solid #30363d;border-radius:7px;color:#f0f0f0;font-size:16px;font-family:'Barlow',sans-serif;padding:10px 11px;outline:none;margin-bottom:10px;}
+.modal-input{width:100%;background:#141824;border:1.5px solid #2d3548;border-radius:7px;color:#f0f0f0;font-size:16px;font-family:'Barlow',sans-serif;padding:10px 11px;outline:none;margin-bottom:10px;}
 .modal-input:focus{border-color:#4fc3f7;}
 .modal-btns{display:flex;gap:8px;}
 .modal-ok{flex:1;background:#1565c0;color:#fff;font-size:14px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;padding:10px;border-radius:7px;border:none;cursor:pointer;}
@@ -222,6 +227,9 @@ textarea:focus{border-color:#4fc3f7;}
   <!-- INPUT -->
   <div class="screen on" id="screen-input">
     <div id="resume-area"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="showScreen('debts')" style="flex:1;padding:9px;background:none;border:1.5px solid #ffb74d55;color:#ffb74d;border-radius:8px;font-size:12px;font-family:Barlow,sans-serif;cursor:pointer;">📋 DEUDAS</button>
+    </div>
     <label class="label">LISTA DEL PARTIDO</label>
     <textarea id="lista" rows="13" placeholder="Lista&#10;1 pepito&#10;2 andres&#10;VS&#10;Eq rival&#10;(deja vacío si no sabes nombres)"></textarea>
     <div class="err" id="err-input">⚠️ Pon al menos 2 equipos (separados por VS).</div>
@@ -232,6 +240,23 @@ textarea:focus{border-color:#4fc3f7;}
   <div class="screen" id="screen-setup">
     <label class="label">COLOR Y CAMPO POR EQUIPO</label>
     <div id="setup-container"></div>
+    <div style="margin-top:14px;">
+      <label class="label">PRECIO POR JUGADOR</label>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;background:#222836;border:1.5px solid #2d3548;border-radius:8px;padding:8px 12px;">
+          <div style="font-size:10px;color:#8b949e;font-family:Barlow,sans-serif;margin-bottom:4px;">💰 PRECIO BASE</div>
+          <input id="price-base" type="number" min="0" max="99" step="0.5" placeholder="5"
+            style="width:100%;background:none;border:none;color:#66bb6a;font-size:22px;font-weight:800;font-family:Barlow Condensed,sans-serif;outline:none;"
+            onchange="session().priceBase=parseFloat(this.value)||0;save();">
+        </div>
+        <div style="flex:1;background:#222836;border:1.5px solid #2d3548;border-radius:8px;padding:8px 12px;">
+          <div style="font-size:10px;color:#8b949e;font-family:Barlow,sans-serif;margin-bottom:4px;">🔥 PRECIO OFERTA</div>
+          <input id="price-hot" type="number" min="0" max="99" step="0.5" placeholder="3"
+            style="width:100%;background:none;border:none;color:#ffb74d;font-size:22px;font-weight:800;font-family:Barlow Condensed,sans-serif;outline:none;"
+            onchange="session().priceHot=parseFloat(this.value)||0;save();">
+        </div>
+      </div>
+    </div>
     <div id="matchup-section" style="display:none;margin-top:14px;">
       <label class="label">QUIÉN JUEGA CONTRA QUIÉN</label>
       <div id="matchup-builder"></div>
@@ -250,7 +275,16 @@ textarea:focus{border-color:#4fc3f7;}
       <div class="gstat"><div class="gstat-n" style="color:#ef5350" id="g-abs">0</div><div class="gstat-l">PENDIENTES</div></div>
       <div class="gstat"><div class="gstat-n" style="color:#fff" id="g-total">0</div><div class="gstat-l">TOTAL</div></div>
     </div>
-    <div id="summary-bar" style="display:none" class="summary-bar"></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:6px;">
+    <button onclick="toggleRevenue()" style="background:none;border:none;color:#555;font-size:12px;font-family:Barlow,sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px;" id="revenue-toggle-btn">
+      <span id="revenue-eye">👁</span> <span style="font-size:10px;letter-spacing:1px;">INGRESO</span>
+    </button>
+  </div>
+  <div id="revenue-bar" style="display:none;background:#1a2a1a;border:1px solid #2d4a2d;border-radius:8px;padding:8px 14px;margin-bottom:10px;align-items:center;justify-content:space-between;">
+    <div style="font-size:11px;color:#66bb6a;font-family:Barlow,sans-serif;letter-spacing:1px;">💰 INGRESO ESTIMADO</div>
+    <div id="revenue-total" style="font-size:22px;font-weight:800;color:#66bb6a;font-family:Barlow Condensed,sans-serif;">0€</div>
+  </div>
+  <div id="summary-bar" style="display:none" class="summary-bar"></div>
     <div id="matches-container"></div>
     <button class="btn-ghost" onclick="showScreen('setup')">⚙ CONFIGURAR</button>
     <button class="btn-ghost" style="margin-top:4px;border-color:#ffb74d;color:#ffb74d;" onclick="showScreen('debts')">📋 HISTORIAL DE DEUDAS</button>
@@ -262,8 +296,9 @@ textarea:focus{border-color:#4fc3f7;}
   <div class="screen" id="screen-debts">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div style="font-size:18px;font-weight:800;color:#ffb74d;letter-spacing:1px;">📋 HISTORIAL DEUDAS</div>
-      <button onclick="showScreen('match')" style="background:none;border:none;color:#8b949e;font-size:13px;font-family:Barlow,sans-serif;cursor:pointer;">← VOLVER</button>
+      <button id="debts-back-btn" onclick="showScreen('match')" style="background:none;border:none;color:#8b949e;font-size:13px;font-family:Barlow,sans-serif;cursor:pointer;">← VOLVER</button>
     </div>
+    <button onclick="promptAddManualDebt()" style="width:100%;margin-bottom:12px;padding:9px;background:none;border:1.5px solid #66bb6a55;color:#66bb6a;border-radius:8px;font-size:12px;font-family:Barlow,sans-serif;cursor:pointer;letter-spacing:1px;">+ AÑADIR DEUDA MANUAL</button>
     <div id="debts-list"></div>
     <div id="debts-empty" style="text-align:center;color:#555;font-family:Barlow,sans-serif;font-size:14px;padding:30px 0;display:none;">Sin deudas registradas ✓</div>
   </div>
@@ -319,10 +354,20 @@ function addSession(){
   const label = fmtNow();
   openModal('NOMBRE DEL PARTIDO', label, '', name=>{
     sessions.push(newSession(name||label));
-    curIdx = sessions.length-1;
+    sortSessionsByTime();
+    curIdx = sessions.findIndex(s=>s.label===(name||label));
+    if(curIdx<0) curIdx=sessions.length-1;
     save();
     renderTabs();
     switchSession(curIdx);
+  });
+}
+function sortSessionsByTime(){
+  sessions.sort((a,b)=>{
+    const ta=a.label.match(/^(\d{1,2}):(\d{2})/);
+    const tb=b.label.match(/^(\d{1,2}):(\d{2})/);
+    if(!ta||!tb) return 0;
+    return (parseInt(ta[1])*60+parseInt(ta[2]))-(parseInt(tb[1])*60+parseInt(tb[2]));
   });
 }
 
@@ -403,7 +448,15 @@ function showScreen(name){
     document.getElementById('screen-'+s).classList.toggle('on', s===name);
   });
   if(session() && name!=='debts') session().screen = name;
-  if(name==='debts') renderDebts();
+  if(name==='debts'){
+    renderDebts();
+    // Fix back button destination
+    const bb=document.getElementById('debts-back-btn');
+    if(bb){
+      const prev=session()&&session().screen==='match'?'match':'input';
+      bb.onclick=()=>showScreen(prev);
+    }
+  }
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -510,6 +563,13 @@ function goMatch(){
 function renderSetup(){
   const c = document.getElementById('setup-container');
   c.innerHTML='';
+  // Restore price inputs
+  setTimeout(()=>{
+    const pb=document.getElementById('price-base');
+    const ph=document.getElementById('price-hot');
+    if(pb) pb.value=session().priceBase||'';
+    if(ph) ph.value=session().priceHot||'';
+  },0);
   teams().forEach((team,ti)=>{
     const card = document.createElement('div'); card.className='setup-card';
     const head = document.createElement('div'); head.className='setup-head';
@@ -681,9 +741,25 @@ function buildTeamBlock(ti){
   const allPaid=team.players.length>0&&team.players.every(p=>st()[p.id]===2);
   const markBtn=document.createElement('button');markBtn.className='tact';
   markBtn.style.cssText='color:'+s.markTxt+';border-color:'+s.markBorder+';';
+  const unpaidCount=team.players.filter(p=>{const s=st()[p.id]||0;return s===0;}).length;
   markBtn.textContent=allPaid?'✓ TODOS PAGADO':'MARCAR TODOS';
   markBtn.id='markall-'+ti;
   markBtn.onclick=()=>markAllPaid(ti,!allPaid);
+  // Add "pay remaining" button if some already marked individually
+  const someMarked=team.players.some(p=>(st()[p.id]||0)>0);
+  if(someMarked && unpaidCount>0 && !allPaid){
+    const remBtn=document.createElement('button');remBtn.className='tact';
+    remBtn.style.cssText='color:#ffb74d;border-color:#ffb74d55;';
+    remBtn.textContent='PAGAR '+unpaidCount+' RESTANTES';
+    remBtn.onclick=()=>{
+      const names=team.players.filter(p=>!(st()[p.id]||0)).map(p=>cap(p.name)||'Plaza').join(', ');
+      openConfirm('PAGAR '+unpaidCount+' RESTANTES',names||'Jugadores sin marcar.',
+        ()=>{ team.players.forEach(p=>{ if(!(st()[p.id]||0)) st()[p.id]=2; }); refreshAndSort(ti); },
+        ()=>{ team.players.forEach(p=>{ if(!(st()[p.id]||0)) st()[p.id]=3; }); refreshAndSort(ti); }
+      );
+    };
+    acts.appendChild(remBtn);
+  }
   const addBtn=document.createElement('button');addBtn.className='tact';
   addBtn.style.cssText='color:'+s.addTxt+';border-color:'+s.addBorder+';';
   addBtn.textContent='+ AÑADIR';
@@ -754,6 +830,32 @@ function buildTeamBlock(ti){
     addHint.textContent='o usa + AÑADIR para agregar jugadores uno a uno';
     emptyDiv.appendChild(addHint);
     pl.appendChild(emptyDiv);
+  } else if(team.players.length > 0 && (team.rivalCount||0) > 0){
+    // Has some manual players + a rival count set — show "pay remaining" 
+    const manualPaid=team.players.filter(p=>(st()[p.id]||0)>=2).length;
+    const totalExpected=team.rivalCount;
+    const remaining=totalExpected - manualPaid - team.players.filter(p=>(st()[p.id]||0)<2).length;
+    const unpaidManual=team.players.filter(p=>(st()[p.id]||0)<2).length;
+    // render normal players first
+    team.players.forEach((p,pi)=>pl.appendChild(makePlayerRow(p,pi+1,ti,s)));
+    // Then show pay-remaining for the non-manual ones
+    const remCount=totalExpected - team.players.length;
+    if(remCount > 0){
+      const remDiv=document.createElement('div');
+      remDiv.style.cssText='padding:6px 8px 2px;';
+      const remBtn=document.createElement('button');
+      remBtn.style.cssText='width:100%;padding:10px;border-radius:7px;border:1.5px solid #ffb74d55;color:#ffb74d;font-size:12px;font-weight:700;font-family:Barlow Condensed,sans-serif;background:none;cursor:pointer;letter-spacing:.5px;';
+      remBtn.textContent='PAGAR '+remCount+' RESTANTES (sin nombre)';
+      remBtn.onclick=()=>{
+        openConfirm('PAGAR RESTANTES','Marcar '+remCount+' jugadores restantes del equipo.',
+          ()=>{ session().state['__rival_rem_'+ti]='paid'; updateGlobal();updateSummary();save(); remDiv.style.display='none'; },
+          ()=>{ session().state['__rival_rem_'+ti]='free'; updateGlobal();updateSummary();save(); remDiv.style.display='none'; }
+        );
+      };
+      if(session().state['__rival_rem_'+ti]) remDiv.style.display='none';
+      remDiv.appendChild(remBtn);
+      pl.appendChild(remDiv);
+    }
   } else {
     team.players.forEach((p,pi)=>pl.appendChild(makePlayerRow(p,pi+1,ti,s)));
   }
@@ -957,7 +1059,7 @@ function movePlayer(pid,fromTi,toTi){
   if(fi===-1)return;
   const [p]=teams()[fromTi].players.splice(fi,1);
   teams()[toTi].players.push(p);
-  delete st()[p.id];
+  // Keep existing state — don't delete
   refreshTeamBlock(fromTi);
   refreshTeamBlock(toTi);
   updateGlobal();updateSummary();save();
@@ -979,7 +1081,7 @@ function showMoveDD(pid,fromTi,others,btn){
   overlay.style.cssText='position:fixed;inset:0;background:#00000066;z-index:998;';
   overlay.onclick=()=>{overlay.remove();openDD=null;};
   const panel=document.createElement('div');
-  panel.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#1e2830;border:1.5px solid #4fc3f7;border-radius:12px;z-index:999;min-width:200px;max-width:280px;width:80%;box-shadow:0 8px 32px #000000cc;overflow:hidden;';
+  panel.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#222836;border:1.5px solid #4fc3f7;border-radius:12px;z-index:999;min-width:200px;max-width:280px;width:80%;box-shadow:0 8px 32px #000000cc;overflow:hidden;';
   const title=document.createElement('div');
   title.style.cssText='padding:10px 14px;font-size:11px;color:#4fc3f7;font-family:Barlow,sans-serif;letter-spacing:1px;border-bottom:1px solid #30363d;';
   title.textContent='MOVER A...';
@@ -1005,14 +1107,15 @@ function openConfirm(title,msg,cb,freeCb){
   confirmFreeCb=freeCb||null;
   document.getElementById('confirm-title').textContent=title;
   document.getElementById('confirm-msg').textContent=msg;
-  // Rebuild buttons
   const btns=document.getElementById('confirm-btns');
   btns.innerHTML='';
+  // OK button — label depends on whether this is a pay action or generic confirm
   const okBtn=document.createElement('button');
   okBtn.className='modal-ok';
-  okBtn.textContent='✅ PAGADO';
+  okBtn.textContent=freeCb?'✅ PAGADO':'SÍ, CONFIRMAR';
   okBtn.onclick=confirmOk;
   btns.appendChild(okBtn);
+  // GRATIS button — only when freeCb provided
   if(freeCb){
     const freeBtn=document.createElement('button');
     freeBtn.style.cssText='flex:1;background:transparent;border:1.5px solid #7c3aed;color:#a78bfa;font-size:13px;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;padding:10px;border-radius:7px;cursor:pointer;';
@@ -1024,10 +1127,11 @@ function openConfirm(title,msg,cb,freeCb){
     };
     btns.appendChild(freeBtn);
   }
+  // Cancel always
   const cancelBtn=document.createElement('button');
   cancelBtn.className='modal-cancel';
   cancelBtn.textContent='CANCELAR';
-  cancelBtn.onclick=closeConfirm;
+  cancelBtn.onclick=()=>closeConfirm();
   btns.appendChild(cancelBtn);
   document.getElementById('confirm-modal').style.display='flex';
 }
@@ -1067,15 +1171,35 @@ function closeModal(e){
 
 // ── STATS ──
 function countSt(ti,s){ return teams()[ti].players.filter(p=>st()[p.id]===s).length; }
+let revenueVisible=false;
+function toggleRevenue(){
+  revenueVisible=!revenueVisible;
+  const bar=document.getElementById('revenue-bar');
+  const eye=document.getElementById('revenue-eye');
+  if(bar) bar.style.display=revenueVisible?'flex':'none';
+  if(eye) eye.textContent=revenueVisible?'🙈':'👁';
+}
 function updateGlobal(){
   const all=teams().flatMap(t=>t.players);
   let extraPaid=0, extraFree=0, extraTotal=0;
   teams().forEach((t,ti)=>{
-    if(t.players.length===0 && (t.rivalCount||0)>0){
-      extraTotal+=t.rivalCount;
-      const ts=st()['__team_'+ti];
-      if(ts==='paid'||ts===true) extraPaid+=t.rivalCount;
-      else if(ts==='free') extraFree+=t.rivalCount;
+    if((t.rivalCount||0)>0){
+      // Empty rival team
+      if(t.players.length===0){
+        extraTotal+=t.rivalCount;
+        const ts=st()['__team_'+ti];
+        if(ts==='paid'||ts===true) extraPaid+=t.rivalCount;
+        else if(ts==='free') extraFree+=t.rivalCount;
+      } else {
+        // Mixed: has some manual players + remaining count
+        const remCount=t.rivalCount - t.players.length;
+        if(remCount>0){
+          extraTotal+=remCount;
+          const tr=st()['__rival_rem_'+ti];
+          if(tr==='paid') extraPaid+=remCount;
+          else if(tr==='free') extraFree+=remCount;
+        }
+      }
     }
   });
   const total=all.length+extraTotal;
@@ -1087,10 +1211,21 @@ function updateGlobal(){
   const gf=document.getElementById('g-free');if(gf)gf.textContent=free;
   document.getElementById('g-abs').textContent=abs;
   document.getElementById('g-total').textContent=total;
+  // Revenue
+  const base=session().priceBase||5;
+  const hot=session().priceHot||3;
+  const revenue=paid*base;
+  const rb=document.getElementById('revenue-bar');
+  const rt=document.getElementById('revenue-total');
+  if(rb&&rt){
+    if(revenueVisible) rb.style.display='flex';
+    rt.textContent=revenue.toFixed(revenue%1?1:0)+'€';
+  }
 }
 function updateSummary(){
   const bar=document.getElementById('summary-bar');
   const pres=teams().flatMap(t=>t.players).filter(p=>st()[p.id]===1);
+  const absentPlayers=teams().flatMap(t=>t.players).filter(p=>!st()[p.id]);
   // Rival teams unpaid
   const rivalPending=[];
   teams().forEach((t,ti)=>{
@@ -1099,26 +1234,36 @@ function updateSummary(){
       if(!st()['__team_'+ti] && n>0) rivalPending.push({name:t.name,count:n});
     }
   });
-  if(!pres.length && !rivalPending.length){bar.style.display='none';return;}
+  if(!pres.length && !absentPlayers.length && !rivalPending.length){bar.style.display='none';return;}
   bar.style.display='block';bar.innerHTML='';
   // Title
   const mainTitle=document.createElement('div');
   mainTitle.style.cssText='font-size:11px;color:#ef5350;font-family:Barlow,sans-serif;letter-spacing:1px;font-weight:700;margin-bottom:8px;';
   mainTitle.textContent='⚠ PENDIENTES DE COBRO — pulsa para ir al jugador';
   bar.appendChild(mainTitle);
-  if(pres.length){
-    const names=document.createElement('div');names.className='sum-names';
-    pres.forEach(p=>{
-      const ch=document.createElement('div');ch.className='sum-chip';
-      ch.style.cssText='background:#1565c030;border:1px solid #4fc3f7;color:#e0f0ff;font-weight:600;';
-      ch.textContent=(p.name?cap(p.name):'Plaza')+' ✋';
-      ch.onclick=()=>{
-        const el=document.getElementById('prow-'+p.id);
-        if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
-      };
-      names.appendChild(ch);
+  // All unpaid (absent + present) grouped by team
+  if(pres.length || absentPlayers.length){
+    teams().forEach((t,ti)=>{
+      const unpaid=t.players.filter(p=>{const s=st()[p.id]||0;return s<2;});
+      if(!unpaid.length) return;
+      const teamLabel=document.createElement('div');
+      teamLabel.style.cssText='font-size:9px;color:#8b949e;font-family:Barlow,sans-serif;letter-spacing:1px;margin:6px 0 3px;';
+      teamLabel.textContent=t.name.toUpperCase();
+      bar.appendChild(teamLabel);
+      const names=document.createElement('div');names.className='sum-names';
+      unpaid.forEach(p=>{
+        const s=st()[p.id]||0;
+        const ch=document.createElement('div');ch.className='sum-chip';
+        ch.style.cssText='background:'+(s===1?'#1565c030':'#ffffff10')+';border:1px solid '+(s===1?'#4fc3f7':'#444')+';color:'+(s===1?'#e0f0ff':'#aaa')+';font-weight:600;cursor:pointer;';
+        ch.textContent=(p.name?cap(p.name):'Plaza')+(s===1?' ✋':' ⏳');
+        ch.onclick=()=>{
+          const el=document.getElementById('prow-'+p.id);
+          if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+        };
+        names.appendChild(ch);
+      });
+      bar.appendChild(names);
     });
-    bar.appendChild(names);
   }
   if(rivalPending.length){
     const rTitle=document.createElement('div');
@@ -1160,6 +1305,15 @@ const DEBT_KEY='cryssports_debts';
 function loadDebts(){ try{ return JSON.parse(localStorage.getItem(DEBT_KEY)||'[]'); }catch(e){ return []; } }
 function saveDebts(d){ try{ localStorage.setItem(DEBT_KEY,JSON.stringify(d)); }catch(e){} }
 
+function promptAddManualDebt(){
+  openModal('NOMBRE DEL DEUDOR','','Nombre del jugador',name=>{
+    if(!name.trim()) return;
+    openModal('PARTIDO / NOTA',fmtNow(),'Partido o referencia',ref=>{
+      addDebt(name.trim(), ref||fmtNow());
+      renderDebts();
+    });
+  });
+}
 function addDebt(playerName, sessionLabel, amount){
   const debts=loadDebts();
   debts.push({ id:uid(), name:playerName, session:sessionLabel, date:new Date().toLocaleDateString('es-ES'), paid:false });
@@ -1190,15 +1344,34 @@ function makeDebtRow(d){
   const row=document.createElement('div');
   row.style.cssText='display:flex;align-items:center;gap:8px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 12px;margin-bottom:6px;';
   const info=document.createElement('div');info.style.cssText='flex:1;';
+  const paidInfo=d.paid?(' · pagado '+d.paidDate):'';
+  const commentLine=d.comment?('<div style="font-size:10px;color:#8b949e;font-family:Barlow,sans-serif;margin-top:2px;">💬 '+d.comment+'</div>'):'';
   info.innerHTML='<div style="font-size:14px;font-weight:700;color:'+(d.paid?'#66bb6a':'#ef5350')+';">'+cap(d.name)+'</div>'
-    +'<div style="font-size:11px;color:#8b949e;font-family:Barlow,sans-serif;">'+d.session+' · '+d.date+'</div>';
+    +'<div style="font-size:11px;color:#8b949e;font-family:Barlow,sans-serif;">'+d.session+' · '+d.date+paidInfo+'</div>'+commentLine;
   const btn=document.createElement('button');
   btn.style.cssText='padding:5px 12px;border-radius:6px;border:1.5px solid '+(d.paid?'#30363d':'#66bb6a55')+';color:'+(d.paid?'#555':'#66bb6a')+';font-size:11px;font-family:Barlow,sans-serif;background:none;cursor:pointer;';
-  btn.textContent=d.paid?'YA PAGÓ':'MARCAR PAGADO';
+  btn.textContent=d.paid?'💬 COMENTARIO':'MARCAR PAGADO';
   btn.onclick=()=>{
-    const debts=loadDebts();
-    const idx=debts.findIndex(x=>x.id===d.id);
-    if(idx>-1){ debts[idx].paid=true; saveDebts(debts); renderDebts(); }
+    if(d.paid){
+      // Add comment
+      openModal('COMENTARIO','',d.comment||'',comment=>{
+        const debts=loadDebts();
+        const idx=debts.findIndex(x=>x.id===d.id);
+        if(idx>-1){ debts[idx].comment=comment; saveDebts(debts); renderDebts(); }
+      });
+    } else {
+      openConfirm('MARCAR PAGADA','Deuda de '+cap(d.name)+' — marcar como pagada?',
+        ()=>{
+          const debts=loadDebts();
+          const idx=debts.findIndex(x=>x.id===d.id);
+          if(idx>-1){
+            debts[idx].paid=true;
+            debts[idx].paidDate=new Date().toLocaleDateString('es-ES');
+            saveDebts(debts); renderDebts();
+          }
+        }
+      );
+    }
   };
   const delBtn=document.createElement('button');
   delBtn.style.cssText='width:26px;height:26px;border-radius:5px;border:1.5px solid #333;color:#555;font-size:11px;background:none;cursor:pointer;';
