@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>CrysSports · Pagos</title>
+<title>Crys Sports · Pagos</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -150,7 +150,7 @@ textarea:focus{border-color:#4fc3f7;}
 .icon-btn:hover{background:#1565c0;border-color:#4fc3f7;color:#fff;}
 
 /* Dropdown */
-.dd{position:absolute;right:0;top:32px;background:#1e2830;border:1.5px solid #4fc3f7;border-radius:8px;z-index:300;min-width:140px;box-shadow:0 8px 24px #000000aa;overflow:hidden;}
+.dd{position:fixed;background:#1e2830;border:1.5px solid #4fc3f7;border-radius:8px;z-index:999;min-width:160px;box-shadow:0 8px 32px #000000cc;overflow:hidden;}
 .dd-item{padding:10px 13px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;color:#e0e0e0;display:block;width:100%;background:none;border:none;text-align:left;transition:background .1s;}
 .dd-item:hover{background:#1565c0;color:#fff;}
 
@@ -218,25 +218,7 @@ textarea:focus{border-color:#4fc3f7;}
   <div class="screen on" id="screen-input">
     <div id="resume-area"></div>
     <label class="label">LISTA DEL PARTIDO</label>
-    <textarea id="lista" rows="13" placeholder="Equipo 1&#10;1 pepito&#10;2 andres&#10;VS&#10;Equipo 2&#10;1 mario&#10;&#10;Puedes dejar equipos vacíos si no sabes los nombres">Equipo 1
-1 pepito
-2 andres
-3 juan
-VS
-Equipo 2
-1 mario
-2 pascual
-3 geo
-VS
-Equipo 3
-1 jorge
-2 lucia
-3 tomas
-VS
-Equipo 4
-1 sara
-2 pablo
-3 marta</textarea>
+    <textarea id="lista" rows="13" placeholder="Lista&#10;1 pepito&#10;2 andres&#10;VS&#10;Eq rival&#10;(deja vacío si no sabes nombres)"></textarea>
     <div class="err" id="err-input">⚠️ Pon al menos 2 equipos (separados por VS).</div>
     <button class="btn-main" onclick="goSetup()">SIGUIENTE →</button>
   </div>
@@ -253,22 +235,28 @@ Equipo 4
 
   <!-- MATCH -->
   <div class="screen" id="screen-match">
-    <div class="gstats">
-      <div class="gstat"><div class="gstat-n" style="color:#4fc3f7" id="g-paid">0</div><div class="gstat-l">PAGADOS</div></div>
+    <div class="gstats" style="flex-wrap:nowrap;">
+      <div class="gstat"><div class="gstat-n" style="color:#66bb6a" id="g-paid">0</div><div class="gstat-l">PAGADOS</div></div>
       <div class="gstat"><div class="gstat-n" style="color:#64b5f6" id="g-pres">0</div><div class="gstat-l">PRESENTES</div></div>
-      <div class="gstat"><div class="gstat-n" style="color:#888" id="g-abs">0</div><div class="gstat-l">AUSENTES</div></div>
+      <div class="gstat"><div class="gstat-n" style="color:#ef5350" id="g-abs">0</div><div class="gstat-l">PENDIENTES</div></div>
       <div class="gstat"><div class="gstat-n" style="color:#fff" id="g-total">0</div><div class="gstat-l">TOTAL</div></div>
-      <div class="prog-box">
-        <div class="prog-top"><span style="color:#8b949e">COBRADO</span><span style="color:#4fc3f7" id="g-pct">0%</span></div>
-        <div class="prog-track"><div class="prog-fill" id="g-bar" style="width:0%;background:linear-gradient(90deg,#1565c0,#4fc3f7)"></div></div>
-      </div>
     </div>
     <div id="summary-bar" style="display:none" class="summary-bar"></div>
     <div id="matches-container"></div>
     <button class="btn-ghost" onclick="showScreen('setup')">⚙ CONFIGURAR</button>
+    <button class="btn-ghost" style="margin-top:4px;border-color:#ffb74d;color:#ffb74d;" onclick="showScreen('debts')">📋 HISTORIAL DE DEUDAS</button>
     <button class="btn-ghost" style="margin-top:4px;border-color:#c62828;color:#ef9a9a;" onclick="finalizeSession()">✓ FINALIZAR SESIÓN</button>
   </div>
 
+  <!-- DEBTS -->
+  <div class="screen" id="screen-debts">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:18px;font-weight:800;color:#ffb74d;letter-spacing:1px;">📋 HISTORIAL DEUDAS</div>
+      <button onclick="showScreen('match')" style="background:none;border:none;color:#8b949e;font-size:13px;font-family:Barlow,sans-serif;cursor:pointer;">← VOLVER</button>
+    </div>
+    <div id="debts-list"></div>
+    <div id="debts-empty" style="text-align:center;color:#555;font-family:Barlow,sans-serif;font-size:14px;padding:30px 0;display:none;">Sin deudas registradas ✓</div>
+  </div>
 </div><!-- /wrap -->
 
 <script>
@@ -362,12 +350,25 @@ function renameSession(idx){
 }
 
 function finalizeSession(){
-  if(confirm('¿Finalizar "'+session().label+'"? Se eliminará de las pestañas.')){
+  openConfirm(
+    "FINALIZAR SESION",
+    "Partido: " + session().label + ". Los jugadores sin pagar se guardaran en deudas.",
+    function(){
+    // Auto-add unpaid (absent/present) players to debts
+    const label=session().label;
+    teams().forEach(t=>{
+      t.players.forEach(p=>{
+        if((st()[p.id]||0)<2 && p.name){
+          addDebt(p.name, label);
+        }
+      });
+    });
     sessions.splice(curIdx,1);
     if(!sessions.length){ sessions=[newSession(fmtNow())]; }
     curIdx=Math.min(curIdx,sessions.length-1);
     save();renderTabs();switchSession(curIdx);
-  }
+    }
+  );
 }
 function fmtNow(){
   const n=new Date();
@@ -376,10 +377,11 @@ function fmtNow(){
 
 // ── SCREENS ──
 function showScreen(name){
-  ['input','setup','match'].forEach(s=>{
+  ['input','setup','match','debts'].forEach(s=>{
     document.getElementById('screen-'+s).classList.toggle('on', s===name);
   });
-  if(session()) session().screen = name;
+  if(session() && name!=='debts') session().screen = name;
+  if(name==='debts') renderDebts();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -387,38 +389,78 @@ function showScreen(name){
 function parseInput(text){
   const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
   const res=[]; let cur=null; let teamNum=0;
+
+  function isJunk(line){
+    if(/https?:\/\//i.test(line)) return true;
+    if(/^\*.+\*$/.test(line)) return true;        // *bold* WhatsApp
+    if(/^[*#_~]/.test(line)) return true;
+    if(/^\d{1,2}:\d{2}/.test(line)) return true;
+    if(/^[\u{1F300}-\u{1FAFF}]+$/u.test(line)) return true;
+    return false;
+  }
+
+  function isTeamName(line){
+    // Explicit "Equipo X" pattern
+    if(/^equipo\s+/i.test(line)) return true;
+    // Single word that is likely a team/person name after VS (set by caller)
+    return false;
+  }
+
+  // First pass: collect all non-junk lines with their types
+  const cleaned=[];
   for(const line of lines){
-    if(/^vs$/i.test(line)){cur=null;continue;}
-    // Is this a player line? Starts with digit+space, or is pure number
-    const isPlayer = /^\d+\s+\S/.test(line) || /^\d+$/.test(line);
-    if(!isPlayer && !cur){
-      // treat as team name/header
-      teamNum++;
-      const rawName = line.match(/^equipo\s+(.+)$/i) ? 'Equipo '+line.match(/^equipo\s+(.+)$/i)[1] : line;
-      cur={name:rawName, color:'b', side:'', players:[]};
-      res.push(cur);
+    if(isJunk(line)) continue;
+    if(/^vs$/i.test(line)){ cleaned.push({type:'vs',line}); continue; }
+    const playerMatch=line.match(/^(\d+)\s+(\S.*)$/);
+    const bareNum=/^\d+[.)]?\s*$/.test(line);
+    if(bareNum) continue;
+    if(playerMatch) cleaned.push({type:'player',name:playerMatch[2].trim(),line});
+    else cleaned.push({type:'other',line});
+  }
+
+  // Second pass: build teams
+  // Rule: an "other" line becomes a team name ONLY if:
+  //   1. It immediately precedes player lines (no other "other" lines between)
+  //   2. OR it matches explicit team pattern
+  // Otherwise ignore it
+  for(let i=0;i<cleaned.length;i++){
+    const item=cleaned[i];
+    if(item.type==='vs'){ cur=null; continue; }
+    if(item.type==='player'){
+      if(!cur){
+        teamNum++;
+        cur={name:'Equipo '+teamNum,color:'b',side:'',players:[]};
+        res.push(cur);
+      }
+      cur.players.push({id:uid(),name:item.name});
       continue;
     }
-    if(isPlayer && !cur){
-      // player line with no team header yet — auto-name
-      teamNum++;
-      cur={name:'Equipo '+teamNum, color:'b', side:'', players:[]};
-      res.push(cur);
-    }
-    if(cur){
-      const pm = line.match(/^\d+\s+(.+)$/);
-      if(pm){ cur.players.push({id:uid(),name:pm[1]}); }
-      else if(/^\d+$/.test(line)){
-        // bare number = unnamed slot
-        cur.players.push({id:uid(),name:''});
+    if(item.type==='other'){
+      // Look ahead: is the very next non-other item a player?
+      let nextIsPlayer=false;
+      for(let j=i+1;j<cleaned.length;j++){
+        if(cleaned[j].type==='player'){ nextIsPlayer=true; break; }
+        if(cleaned[j].type==='vs') break;
+        if(cleaned[j].type==='other') break; // another label in between — not a team name
+      }
+      if(nextIsPlayer && isTeamName(item.line)){
+        // Use as team name
+        cur=null;
+        const rawName=item.line.match(/^equipo\s+(.+)$/i)
+          ?'Equipo '+item.line.match(/^equipo\s+(.+)$/i)[1]:item.line;
+        cur={name:rawName,color:'b',side:'',players:[]};
+        teamNum++;
+        res.push(cur);
       } else {
-        // plain name no number
-        cur.players.push({id:uid(),name:line});
+        // Ignore — it's location/date/other info
+        // But reset cur so next players start a new team
+        cur=null;
       }
     }
   }
-  return res;
+  return res.filter(t=>t.players.length>0);
 }
+
 function buildMatches(n){ const m=[]; for(let i=0;i+1<n;i+=2) m.push([i,i+1]); return m; }
 function uid(){ return 'p'+Math.random().toString(36).slice(2,9); }
 function cap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
@@ -542,10 +584,10 @@ function buildTeamBlock(ti){
   const nm = document.createElement('div'); nm.className='team-name'; nm.style.color=s.nameColor; nm.textContent=team.name.toUpperCase()+' · '+team.players.length;
   // side tag
   if(team.side){
-    const tag=document.createElement('span');
-    tag.className='side-tag '+(team.side==='L'?'tag-L':'tag-R');
-    tag.textContent=team.side==='L'?'◀ IZQ':'DER ▶';
-    nm.appendChild(document.createTextNode(' ')); nm.appendChild(tag);
+    const tag=document.createElement('div');
+    tag.style.cssText='font-size:13px;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:6px;margin-top:3px;'+(team.side==='L'?'background:#1565c033;border:1.5px solid #4fc3f7;color:#4fc3f7;':'background:#e65c0022;border:1.5px solid #ffb74d;color:#ffb74d;');
+    tag.textContent=team.side==='L'?'◀ CAMPO IZQ':'CAMPO DER ▶';
+    nm.appendChild(document.createElement('br')); nm.appendChild(tag);
   }
   const badge=document.createElement('div');badge.className='team-badge';badge.id='badge-'+ti;
   badge.style.cssText='color:'+s.accent+';background:'+s.badgeBg+';border-color:'+s.badgeBorder+';';
@@ -586,10 +628,15 @@ function buildTeamBlock(ti){
     countInput.value=rivalCount||'';
     countInput.placeholder='0';
     countInput.style.cssText='width:60px;background:#0d1117;border:1.5px solid #30363d;border-radius:6px;color:#f0f0f0;font-size:16px;font-family:Barlow,sans-serif;padding:5px 8px;outline:none;text-align:center;';
-    countInput.oninput=()=>{
+    countInput.addEventListener('input',(e)=>{
+      e.stopPropagation();
       teams()[ti].rivalCount=parseInt(countInput.value)||0;
-      updateGlobal();save();
-    };
+      updateGlobal();
+      // save after short delay to avoid re-render during typing
+      clearTimeout(countInput._t);
+      countInput._t=setTimeout(()=>save(),800);
+    });
+    countInput.addEventListener('click',(e)=>e.stopPropagation());
     countRow.appendChild(countLabel);countRow.appendChild(countInput);
     emptyDiv.appendChild(countRow);
 
@@ -651,7 +698,7 @@ function makePlayerRow(player,num,ti,s){
   const badge=document.createElement('div');
   badge.className='p-badge';
   badge.style.flexShrink='0';
-  badge.textContent=curSt===2?'✅':curSt===1?'✋':'⏳';
+  badge.textContent=curSt===2?'':curSt===1?'✋':'⏳';
 
   infoBar.appendChild(circle);
   infoBar.appendChild(nameEl);
@@ -720,7 +767,7 @@ function makePlayerRow(player,num,ti,s){
     mw.style.cssText='position:relative;flex-shrink:0;display:flex;';
     const mb=document.createElement('button');
     mb.style.cssText=iconSty;mb.innerHTML='⇄';mb.title='Mover';
-    mb.onclick=(e)=>{ e.stopPropagation(); showMoveDD(player.id,ti,others,mw); };
+    mb.onclick=(e)=>{ e.stopPropagation(); showMoveDD(player.id,ti,others,mb); };
     mw.appendChild(mb);actRow.appendChild(mw);
   }
 
@@ -834,23 +881,29 @@ function refreshTeamBlock(ti){
 }
 
 // ── DROPDOWN ──
-function showMoveDD(pid,fromTi,others,container){
+function showMoveDD(pid,fromTi,others,btn){
   if(openDD){openDD.remove();openDD=null;}
-  const dd=document.createElement('div');dd.className='dd';openDD=dd;
+  // Overlay + centered panel — always visible regardless of scroll position
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:#00000066;z-index:998;';
+  overlay.onclick=()=>{overlay.remove();openDD=null;};
+  const panel=document.createElement('div');
+  panel.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#1e2830;border:1.5px solid #4fc3f7;border-radius:12px;z-index:999;min-width:200px;max-width:280px;width:80%;box-shadow:0 8px 32px #000000cc;overflow:hidden;';
+  const title=document.createElement('div');
+  title.style.cssText='padding:10px 14px;font-size:11px;color:#4fc3f7;font-family:Barlow,sans-serif;letter-spacing:1px;border-bottom:1px solid #30363d;';
+  title.textContent='MOVER A...';
+  panel.appendChild(title);
   others.forEach(t=>{
     const toTi=teams().indexOf(t);
-    const item=document.createElement('button');item.className='dd-item';
+    const item=document.createElement('button');
+    item.style.cssText='display:block;width:100%;padding:12px 16px;font-size:15px;font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:.5px;cursor:pointer;color:#e0e0e0;background:none;border:none;border-bottom:1px solid #30363d22;text-align:left;';
     item.textContent='→ '+t.name;
-    item.onclick=(e)=>{e.stopPropagation();movePlayer(pid,fromTi,toTi);dd.remove();openDD=null;};
-    dd.appendChild(item);
+    item.onclick=(e)=>{e.stopPropagation();overlay.remove();openDD=null;movePlayer(pid,fromTi,toTi);};
+    panel.appendChild(item);
   });
-  container.appendChild(dd);
-  setTimeout(()=>{
-    document.addEventListener('click',function cl(){
-      if(openDD){openDD.remove();openDD=null;}
-      document.removeEventListener('click',cl);
-    });
-  },10);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  openDD=overlay;
 }
 
 // ── CONFIRM MODAL ──
@@ -897,41 +950,68 @@ function closeModal(e){
 function countSt(ti,s){ return teams()[ti].players.filter(p=>st()[p.id]===s).length; }
 function updateGlobal(){
   const all=teams().flatMap(t=>t.players);
-  // Add virtual players for empty teams marked as paid
   let extraPaid=0, extraTotal=0;
   teams().forEach((t,ti)=>{
-    if(t.players.length===0 && st()['__team_'+ti]){
-      const n=t.rivalCount||0;
-      extraTotal+=n; extraPaid+=st()['__team_'+ti]===true?n:0;
+    if(t.players.length===0 && (t.rivalCount||0)>0){
+      extraTotal+=t.rivalCount;
+      if(st()['__team_'+ti]===true) extraPaid+=t.rivalCount;
     }
   });
   const total=all.length+extraTotal;
   const paid=all.filter(p=>st()[p.id]===2).length+extraPaid;
   const pres=all.filter(p=>st()[p.id]===1).length;
   const abs=total-paid-pres;
-  const pct=total>0?Math.round((paid/total)*100):0;
   document.getElementById('g-paid').textContent=paid;
   document.getElementById('g-pres').textContent=pres;
   document.getElementById('g-abs').textContent=abs;
   document.getElementById('g-total').textContent=total;
-  document.getElementById('g-pct').textContent=pct+'%';
-  document.getElementById('g-bar').style.width=pct+'%';
 }
 function updateSummary(){
   const bar=document.getElementById('summary-bar');
   const pres=teams().flatMap(t=>t.players).filter(p=>st()[p.id]===1);
-  if(!pres.length){bar.style.display='none';return;}
-  bar.style.display='block';bar.innerHTML='';
-  const sec=document.createElement('div');sec.className='sum-sec';
-  const title=document.createElement('div');title.className='sum-title';
-  title.style.color='#64b5f6';title.textContent='🔵 PRESENTES — pendiente de cobro';
-  const names=document.createElement('div');names.className='sum-names';
-  pres.forEach(p=>{
-    const ch=document.createElement('div');ch.className='sum-chip';
-    ch.style.cssText='background:#1565c018;border:1px solid #64b5f655;color:#64b5f6;';
-    ch.textContent=cap(p.name)||'Plaza';names.appendChild(ch);
+  // Rival teams unpaid
+  const rivalPending=[];
+  teams().forEach((t,ti)=>{
+    if(t.players.length===0){
+      const n=t.rivalCount||0;
+      if(!st()['__team_'+ti] && n>0) rivalPending.push({name:t.name,count:n});
+    }
   });
-  sec.appendChild(title);sec.appendChild(names);bar.appendChild(sec);
+  if(!pres.length && !rivalPending.length){bar.style.display='none';return;}
+  bar.style.display='block';bar.innerHTML='';
+  // Title
+  const mainTitle=document.createElement('div');
+  mainTitle.style.cssText='font-size:11px;color:#ef5350;font-family:Barlow,sans-serif;letter-spacing:1px;font-weight:700;margin-bottom:8px;';
+  mainTitle.textContent='⚠ PENDIENTES DE COBRO — pulsa para ir al jugador';
+  bar.appendChild(mainTitle);
+  if(pres.length){
+    const names=document.createElement('div');names.className='sum-names';
+    pres.forEach(p=>{
+      const ch=document.createElement('div');ch.className='sum-chip';
+      ch.style.cssText='background:#1565c030;border:1px solid #4fc3f7;color:#e0f0ff;font-weight:600;';
+      ch.textContent=(p.name?cap(p.name):'Plaza')+' ✋';
+      ch.onclick=()=>{
+        const el=document.getElementById('prow-'+p.id);
+        if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+      };
+      names.appendChild(ch);
+    });
+    bar.appendChild(names);
+  }
+  if(rivalPending.length){
+    const rTitle=document.createElement('div');
+    rTitle.style.cssText='font-size:10px;color:#ffb74d;font-family:Barlow,sans-serif;margin-top:8px;margin-bottom:4px;';
+    rTitle.textContent='EQUIPOS RIVALES SIN COBRAR';
+    bar.appendChild(rTitle);
+    const rNames=document.createElement('div');rNames.className='sum-names';
+    rivalPending.forEach(r=>{
+      const ch=document.createElement('div');ch.className='sum-chip';
+      ch.style.cssText='background:#ffb74d18;border:1px solid #ffb74d55;color:#ffb74d;';
+      ch.textContent=r.name+' ('+r.count+' pendientes)';
+      rNames.appendChild(ch);
+    });
+    bar.appendChild(rNames);
+  }
 }
 
 // ── SHUFFLE ──
@@ -951,6 +1031,63 @@ function shufflePlayers(){
   session().state={};
   save();
   renderSetup();
+}
+
+// ── DEBTS ──
+const DEBT_KEY='cryssports_debts';
+function loadDebts(){ try{ return JSON.parse(localStorage.getItem(DEBT_KEY)||'[]'); }catch(e){ return []; } }
+function saveDebts(d){ try{ localStorage.setItem(DEBT_KEY,JSON.stringify(d)); }catch(e){} }
+
+function addDebt(playerName, sessionLabel, amount){
+  const debts=loadDebts();
+  debts.push({ id:uid(), name:playerName, session:sessionLabel, date:new Date().toLocaleDateString('es-ES'), paid:false });
+  saveDebts(debts);
+}
+
+function renderDebts(){
+  const debts=loadDebts();
+  const list=document.getElementById('debts-list');
+  const empty=document.getElementById('debts-empty');
+  if(!list) return;
+  list.innerHTML='';
+  const pending=debts.filter(d=>!d.paid);
+  const done=debts.filter(d=>d.paid);
+  if(!debts.length){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  if(pending.length){
+    const t=document.createElement('div');t.style.cssText='font-size:10px;color:#ef5350;font-family:Barlow,sans-serif;letter-spacing:1px;margin-bottom:8px;';t.textContent='PENDIENTES';list.appendChild(t);
+    pending.forEach(d=>list.appendChild(makeDebtRow(d)));
+  }
+  if(done.length){
+    const t=document.createElement('div');t.style.cssText='font-size:10px;color:#66bb6a;font-family:Barlow,sans-serif;letter-spacing:1px;margin:12px 0 8px;';t.textContent='PAGADAS';list.appendChild(t);
+    done.forEach(d=>list.appendChild(makeDebtRow(d)));
+  }
+}
+
+function makeDebtRow(d){
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:center;gap:8px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 12px;margin-bottom:6px;';
+  const info=document.createElement('div');info.style.cssText='flex:1;';
+  info.innerHTML='<div style="font-size:14px;font-weight:700;color:'+(d.paid?'#66bb6a':'#ef5350')+';">'+cap(d.name)+'</div>'
+    +'<div style="font-size:11px;color:#8b949e;font-family:Barlow,sans-serif;">'+d.session+' · '+d.date+'</div>';
+  const btn=document.createElement('button');
+  btn.style.cssText='padding:5px 12px;border-radius:6px;border:1.5px solid '+(d.paid?'#30363d':'#66bb6a55')+';color:'+(d.paid?'#555':'#66bb6a')+';font-size:11px;font-family:Barlow,sans-serif;background:none;cursor:pointer;';
+  btn.textContent=d.paid?'YA PAGÓ':'MARCAR PAGADO';
+  btn.onclick=()=>{
+    const debts=loadDebts();
+    const idx=debts.findIndex(x=>x.id===d.id);
+    if(idx>-1){ debts[idx].paid=true; saveDebts(debts); renderDebts(); }
+  };
+  const delBtn=document.createElement('button');
+  delBtn.style.cssText='width:26px;height:26px;border-radius:5px;border:1.5px solid #333;color:#555;font-size:11px;background:none;cursor:pointer;';
+  delBtn.textContent='✕';
+  delBtn.onclick=()=>{
+    const debts=loadDebts();
+    saveDebts(debts.filter(x=>x.id!==d.id));
+    renderDebts();
+  };
+  row.appendChild(info);row.appendChild(btn);row.appendChild(delBtn);
+  return row;
 }
 
 // ── INIT ──
