@@ -250,6 +250,11 @@ textarea{color:#1e293b;}
   <!-- SETUP -->
   <div class="screen" id="screen-setup">
     <label class="label">COLOR Y CAMPO POR EQUIPO</label>
+  <div id="campo-display" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:13px;color:#15803d;font-family:Barlow,sans-serif;">
+    📍 <span id="campo-name"></span>
+    <button onclick="editCampo()" style="background:none;border:none;color:#15803d;font-size:11px;cursor:pointer;margin-left:6px;">✎ editar</button>
+  </div>
+  <button onclick="editCampo()" id="add-campo-btn" style="width:100%;margin-bottom:10px;padding:7px;background:none;border:1.5px solid #86efac44;color:#15803d;border-radius:7px;font-size:11px;font-family:Barlow,sans-serif;cursor:pointer;">📍 AÑADIR CAMPO</button>
     <div id="setup-container"></div>
     <div style="margin-top:14px;">
       <label class="label">PRECIO POR JUGADOR</label>
@@ -424,34 +429,61 @@ function addSession(){
 
 function parseLabelDate(label, fallback){
   if(!label) return {dateObj:fallback, dateLabel:fallback.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'})};
-  // Try DD/MM pattern: 14/06 18:00
-  const dmMatch=label.match(/(\d{1,2})\/(\d{1,2})(?:\s+(\d{1,2}:\d{2}))?/);
-  if(dmMatch){
-    const d=parseInt(dmMatch[1]),m=parseInt(dmMatch[2])-1;
-    const yr=new Date().getFullYear();
+  const now=new Date();
+  const yr=now.getFullYear();
+
+  const MONTH_MAP={'enero':0,'febrero':1,'marzo':2,'abril':3,'mayo':4,'junio':5,
+    'julio':6,'agosto':7,'septiembre':8,'octubre':9,'noviembre':10,'diciembre':11};
+
+  // Helper: normalize accents
+  const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+  // Pattern 1: DD/MM HH:MM or DD/MM
+  const p1=label.match(/(\d{1,2})\/(\d{1,2})(?:[\s,]+(\d{1,2}:\d{2}))?/);
+  if(p1){
+    const d=parseInt(p1[1]),m=parseInt(p1[2])-1;
     const dateObj=new Date(yr,m,d,12,0,0);
     const dateLabel=dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    return {dateObj, dateLabel};
+    return {dateObj,dateLabel};
   }
-  // Try day name: Sábado 18:00
-  const dayTimeMatch=label.match(/([a-záéíóúüñ]+)\s+(\d{1,2}:\d{2})/i);
-  if(dayTimeMatch){
-    const dayName=dayTimeMatch[1].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+  // Pattern 2: Day DD Month HH:MM  e.g. "Sábado 13 junio 20:45" or "Sábado 13 20:45"
+  const p2=label.match(/([a-záéíóúüñ]+)[\s,]+(\d{1,2})(?:[\s,]+([a-záéíóúüñ]+))?(?:[\s,]+(\d{1,2}:\d{2}))?/i);
+  if(p2){
+    const dayOrMonth=norm(p2[1]);
+    const num=parseInt(p2[2]);
+    const maybeMonth=p2[3]?norm(p2[3]):null;
+    const dayInDayMap=DAY_MAP[dayOrMonth]!==undefined;
+
+    if(dayInDayMap && num>=1 && num<=31){
+      // dayName + day number
+      const monthIdx=maybeMonth&&MONTH_MAP[maybeMonth]!==undefined?MONTH_MAP[maybeMonth]:now.getMonth();
+      const dateObj=new Date(yr,monthIdx,num,12,0,0);
+      const dateLabel=dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      return {dateObj,dateLabel};
+    }
+  }
+
+  // Pattern 3: just day name + time "Sábado 20:45"
+  const p3=label.match(/([a-záéíóúüñ]+)[\s,]+(\d{1,2}:\d{2})/i);
+  if(p3){
+    const dayName=norm(p3[1]);
     const dayIdx=DAY_MAP[dayName];
     if(dayIdx!==undefined){
-      const now=new Date();
       let daysAhead=dayIdx-now.getDay();
-      if(daysAhead<=0) daysAhead+=7;
+      if(daysAhead<0) daysAhead+=7; // past day this week → next week
+      // If today is that day, use today (not next week)
       const target=new Date(now);
       target.setDate(now.getDate()+daysAhead);
       target.setHours(12,0,0,0);
       const dateLabel=target.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-      return {dateObj:target, dateLabel};
+      return {dateObj:target,dateLabel};
     }
   }
+
   // Fallback: today
   const dateLabel=fallback.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  return {dateObj:fallback, dateLabel};
+  return {dateObj:fallback,dateLabel};
 }
 
 function labelWithDay(label, dateObj){
@@ -744,6 +776,15 @@ const DAY_MAP={
   'viernes':5,'sábado':6,'sabado':6,'domingo':0
 };
 
+function applyDetectedLabel(){
+  const infoDiv=document.getElementById('detected-info');
+  if(!infoDiv||!infoDiv._detected) return;
+  const d=infoDiv._detected;
+  session().label=d.label;
+  if(d.createdDate) session().createdDate=d.createdDate;
+  if(d.savedAt) session().savedAt=d.savedAt;
+  save(); renderTabs();
+}
 function createMultipleSessions(){
   openModal('HORARIOS','','Un horario por línea, ej:\nLunes 18:00\nMartes 19:00\nMiércoles 20:00',text=>{
     if(!text||!text.trim()) return;
@@ -790,17 +831,11 @@ function detectSessionInfo(text){
       target.setDate(now.getDate()+daysAhead);
       const dateLabel=target.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
       const fullLabel=dayTimeMatch[1].charAt(0).toUpperCase()+dayTimeMatch[1].slice(1)+' '+time;
-      infoDiv.style.display='block';
-      infoDiv.innerHTML='📅 Detectado: <b>'+fullLabel+'</b> ('+dateLabel+')';
-      infoDiv._detected={label:fullLabel, createdDate:dateLabel+' de '+target.getFullYear(), savedAt:target.toISOString()};
-      return;
-    }
-  }
-  if(timeOnlyMatch){
     infoDiv.style.display='block';
-    infoDiv.innerHTML='⏱ Hora detectada: <b>'+timeOnlyMatch[1]+'</b>';
-    infoDiv._detected={label:timeOnlyMatch[1], createdDate:null, savedAt:null};
-    return;
+  infoDiv.innerHTML='📅 Detectado: <b>'+labelStr+'</b> ('+dayPart+')';
+  infoDiv._detected={label:labelStr, createdDate:parsed.dateLabel, savedAt:parsed.dateObj.toISOString()};
+  applyDetectedLabel();
+    }
   }
   infoDiv.style.display='none';
   infoDiv._detected=null;
@@ -835,6 +870,13 @@ function backToInput(){
   }
   showScreen('input');
 }
+function editCampo(){
+  openModal('NOMBRE DEL CAMPO', session().campo||'', 'Ej: Campo Expo, Municipal...', name=>{
+    session().campo=(name||'').trim();
+    save();
+    renderSetup();
+  });
+}
 function goMatch(){
   renderMatch();
   showScreen('match');
@@ -845,12 +887,21 @@ function goMatch(){
 function renderSetup(){
   const c = document.getElementById('setup-container');
   c.innerHTML='';
-  // Restore price inputs
+  // Restore price inputs and campo
   setTimeout(()=>{
     const pb=document.getElementById('price-base');
     const ph=document.getElementById('price-hot');
     if(pb) pb.value=session().priceBase||'';
     if(ph) ph.value=session().priceHot||'';
+    const cd=document.getElementById('campo-display');
+    const cn=document.getElementById('campo-name');
+    const ab=document.getElementById('add-campo-btn');
+    if(session().campo){
+      if(cd){cd.style.display='block';} if(cn) cn.textContent=session().campo;
+      if(ab) ab.style.display='none';
+    } else {
+      if(cd){cd.style.display='none';} if(ab) ab.style.display='block';
+    }
   },0);
   teams().forEach((team,ti)=>{
     const card = document.createElement('div'); card.className='setup-card';
@@ -1003,7 +1054,7 @@ function renderMatch(){
     const mt = document.createElement('div'); mt.className='match-hdr-title';
     mt.textContent=tA.name.toUpperCase()+' VS '+tB.name.toUpperCase();
     const mtime = document.createElement('div'); mtime.className='match-hdr-time';
-    mtime.textContent='⏱ '+session().label;
+    mtime.textContent='⏱ '+session().label+(session().campo?' · 📍'+session().campo:'');
     mh.appendChild(mt); mh.appendChild(mtime); block.appendChild(mh);
     // team A
     block.appendChild(buildTeamBlock(iA));
@@ -1938,37 +1989,48 @@ function exportBackup(){
     sessions: sessions,
     debts: loadDebts(),
     exportedAt: new Date().toISOString(),
-    version: 'cryssports-v57'
+    version: 'cryssports-v61'
   };
   const json=JSON.stringify(data, null, 2);
-  const blob=new Blob([json],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
   const date=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
-  a.download='cryssports-backup-'+date+'.json';
-  a.href=url;
-  a.click();
-  URL.revokeObjectURL(url);
+  const filename='cryssports-backup-'+date+'.json';
+  // Try download, fallback to new tab
+  try {
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.download=filename; a.href=url;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },1000);
+  } catch(e) {
+    // Fallback: open in new tab
+    const win=window.open('','_blank');
+    win.document.write('<pre>'+json+'</pre>');
+    win.document.title=filename;
+  }
 }
 
 function importBackup(){
   const input=document.createElement('input');
-  input.type='file';input.accept='.json';
+  input.type='file'; input.accept='.json,.txt';
+  document.body.appendChild(input);
   input.onchange=(e)=>{
     const file=e.target.files[0];
-    if(!file) return;
+    if(!file){ document.body.removeChild(input); return; }
     const reader=new FileReader();
     reader.onload=(ev)=>{
       try{
         const data=JSON.parse(ev.target.result);
-        if(data.sessions){
-          openConfirm('RESTAURAR COPIA','Se reemplazarán todos los datos actuales.',()=>{
-            sessions=data.sessions;
-            if(data.debts) saveDebts(data.debts);
-            curIdx=0;save();renderTabs();switchSession(0);showScreen('home');
+        if(data.sessions&&Array.isArray(data.sessions)){
+          openConfirm('RESTAURAR COPIA','Se importarán '+data.sessions.length+' partidos. Los datos actuales se conservan.',()=>{
+            // Merge: add imported sessions that don't already exist
+            data.sessions.forEach(s=>{ if(!sessions.find(x=>x.id===s.id)) sessions.push(s); });
+            if(data.debts){ const existing=loadDebts(); const merged=[...existing,...data.debts.filter(d=>!existing.find(e=>e.id===d.id))]; saveDebts(merged); }
+            sortSessionsByTime(); save(); renderTabs(); showScreen('home');
           });
-        }
-      }catch(e){ alert('Archivo no válido'); }
+        } else { alert('Archivo no válido — no contiene datos de partidos'); }
+      }catch(e){ alert('Error al leer el archivo: '+e.message); }
+      document.body.removeChild(input);
     };
     reader.readAsText(file);
   };
