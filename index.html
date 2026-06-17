@@ -426,8 +426,10 @@ function addSession(){
     const parsed=parseLabelDate(label, now);
     // Display label = time only if we detected a date, else full label
     const timeMatch=label.match(/(\d{1,2}:\d{2})/);
-    const hasDate=/\d{1,2}[/\s]/.test(label)||/(?:lunes|martes|mi|jueves|viernes|s[aá]bado|domingo)/i.test(label);
-    const displayLabel=hasDate&&timeMatch?timeMatch[1]:labelWithDay(label,parsed.dateObj);
+    const hasDate=/\d{1,2}\//.test(label)||/(?:lunes|martes|mi|jueves|viernes|s[aá]bado|domingo)/i.test(label);
+    // If input contains a time, always use just the time as label (cleaner)
+    // If no time at all, fall back to labelWithDay
+    const displayLabel=timeMatch?timeMatch[1]:labelWithDay(label,parsed.dateObj);
     const ses=newSession(displayLabel);
     ses.createdDate=parsed.dateLabel;
     ses.savedAt=parsed.dateObj.toISOString();
