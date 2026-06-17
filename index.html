@@ -210,8 +210,10 @@ textarea{color:#1e293b;}
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-title" id="modal-title">—</div>
     <div class="modal-sub" id="modal-sub" style="display:none;color:#374151;"></div>
-    <input class="modal-input" id="modal-input" type="text" maxlength="40"
+    <input class="modal-input" id="modal-input" type="text" maxlength="80"
       onkeydown="if(event.key==='Enter')modalOk()">
+    <textarea class="modal-input" id="modal-textarea" rows="5" style="display:none;resize:vertical;"
+      placeholder=""></textarea>
     <div class="modal-btns">
       <button class="modal-ok" onclick="modalOk()">GUARDAR</button>
       <button class="modal-cancel" onclick="closeModal()">CANCELAR</button>
@@ -312,13 +314,20 @@ textarea{color:#1e293b;}
   <!-- HOME / HISTORY -->
   <div class="screen" id="screen-home">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:18px;font-weight:800;color:#1565c0;letter-spacing:1px;">🏠 PARTIDOS</div>
+      <div style="font-size:18px;font-weight:800;color:#1565c0;letter-spacing:1px;">🏠 HISTORIAL</div>
       <div style="display:flex;gap:6px;align-items:center;">
         <button onclick="toggleHomeRev()" style="background:none;border:1px solid #e0e4ea;color:#64748b;border-radius:6px;font-size:11px;padding:4px 8px;cursor:pointer;" id="home-rev-btn">👁 €</button>
-        <button onclick="exportBackup()" style="background:none;border:1px solid #e0e4ea;color:#64748b;border-radius:6px;font-size:11px;padding:4px 8px;cursor:pointer;" title="Exportar backup">💾</button>
-        <button onclick="importBackup()" style="background:none;border:1px solid #e0e4ea;color:#64748b;border-radius:6px;font-size:11px;padding:4px 8px;cursor:pointer;" title="Importar backup">📂</button>
+        <button onclick="exportBackup()" style="background:none;border:1px solid #e0e4ea;color:#64748b;border-radius:6px;font-size:11px;padding:4px 8px;cursor:pointer;" title="Guardar copia">💾</button>
+        <button onclick="importBackup()" style="background:none;border:1px solid #e0e4ea;color:#64748b;border-radius:6px;font-size:11px;padding:4px 8px;cursor:pointer;" title="Restaurar copia">📂</button>
+        <button onclick="emailBackup()" style="background:none;border:1px solid #e0e4ea;color:#64748b;border-radius:6px;font-size:11px;padding:4px 8px;cursor:pointer;" title="Enviar por email">✉️</button>
         <button onclick="showScreen('input')" style="background:#1565c0;border:none;color:#fff;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;">+ NUEVO</button>
       </div>
+    </div>
+    <!-- Backup reminder -->
+    <div id="backup-reminder" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div style="font-size:12px;color:#92400e;font-family:Barlow,sans-serif;flex:1;" id="backup-reminder-text">⚠ Recuerda hacer copia de seguridad</div>
+      <button onclick="exportBackup()" style="background:#f59e0b;border:none;color:#fff;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;">💾 Guardar</button>
+      <button onclick="document.getElementById('backup-reminder').style.display='none'" style="background:none;border:none;color:#92400e;font-size:14px;cursor:pointer;">✕</button>
     </div>
     <!-- ACTIVE sessions -->
     <div id="home-active-list"></div>
@@ -415,13 +424,16 @@ function addSession(){
   openModal('FECHA Y HORA', fmtNow(), 'Ej: Sábado 18:00  o  14/06 19:00  o  solo 18:00', name=>{
     const label=(name||fmtNow()).trim();
     const parsed=parseLabelDate(label, now);
-    const fullLabel=labelWithDay(label, parsed.dateObj);
-    const ses=newSession(fullLabel);
+    // Display label = time only if we detected a date, else full label
+    const timeMatch=label.match(/(\d{1,2}:\d{2})/);
+    const hasDate=/\d{1,2}[/\s]/.test(label)||/(?:lunes|martes|mi|jueves|viernes|s[aá]bado|domingo)/i.test(label);
+    const displayLabel=hasDate&&timeMatch?timeMatch[1]:labelWithDay(label,parsed.dateObj);
+    const ses=newSession(displayLabel);
     ses.createdDate=parsed.dateLabel;
     ses.savedAt=parsed.dateObj.toISOString();
     sessions.push(ses);
     sortSessionsByTime();
-    curIdx=sessions.findIndex(s=>s.label===label&&!s.closed);
+    curIdx=sessions.findIndex(s=>s.id===ses.id);
     if(curIdx<0) curIdx=sessions.length-1;
     save(); renderTabs(); switchSession(curIdx);
   });
@@ -625,7 +637,9 @@ function finalizeSession(){
       });
       const rev=paidBase*base+paidHot*hotP+rivalPaid*base;
       // Add debts
-      unpaidNames.forEach(name=>addDebt(name,label));
+      const sesBase=session().priceBase||5;
+      const sesCampo=session().campo||null;
+      unpaidNames.forEach(name=>addDebt(name,label,sesBase,sesCampo));
       // Mark closed — DO NOT delete
       session().closed=true;
       session().revenue=rev;
@@ -657,7 +671,7 @@ function showScreen(name){
     const lista=document.getElementById('lista');
     if(lista && raw) lista.value=raw;
   }
-  if(name==='home'){ sortSessionsByTime(); renderTabs(); renderHome(); }
+  if(name==='home'){ sortSessionsByTime(); renderTabs(); renderHome(); setTimeout(checkBackupReminder,100); }
   if(name==='debts'){
     renderDebts();
     const bb=document.getElementById('debts-back-btn');
@@ -780,13 +794,15 @@ function applyDetectedLabel(){
   const infoDiv=document.getElementById('detected-info');
   if(!infoDiv||!infoDiv._detected) return;
   const d=infoDiv._detected;
-  session().label=d.label;
+  // Label = time only for display, date stored separately
+  const timeMatch=d.label.match(/(\d{1,2}:\d{2})/);
+  session().label=timeMatch?timeMatch[1]:d.label;
   if(d.createdDate) session().createdDate=d.createdDate;
   if(d.savedAt) session().savedAt=d.savedAt;
   save(); renderTabs();
 }
 function createMultipleSessions(){
-  openModal('HORARIOS','','Un horario por línea, ej:\nLunes 18:00\nMartes 19:00\nMiércoles 20:00',text=>{
+  openModal('HORARIOS','','Lunes 18:00\nMartes 19:00\nMiércoles 20:00',text=>{
     if(!text||!text.trim()) return;
     const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
     const now=new Date();
@@ -802,45 +818,49 @@ function createMultipleSessions(){
     });
     if(created>0){
       sortSessionsByTime();
-      curIdx=sessions.findIndex(s=>!s.closed)&&0;
+      curIdx=sessions.findIndex(s=>!s.closed)||0;
       save();renderTabs();showScreen('home');
     }
-  });
+  },true);
 }
-
 function detectSessionInfo(text){
   const infoDiv=document.getElementById('detected-info');
-  if(!infoDiv||!text) return;
-  // Look for day + time pattern: *SÁBADO 18:45* or SÁBADO 18:45 or just 18:45
-  const dayTimeMatch=text.match(/(?:\*)?([a-záéíóúüñ]+)\s+(\d{1,2}:\d{2})(?:\*)?/i);
+  if(!infoDiv) return;
+  if(!text||!text.trim()){ infoDiv.style.display='none'; infoDiv._detected=null; return; }
+  const dayTimeMatch=text.match(/(?:\*)?([a-zA-Z\u00e0-\u00fc]+)\s+(\d{1,2}:\d{2})(?:\*)?/i);
   const timeOnlyMatch=text.match(/(\d{1,2}:\d{2})/);
-
   if(dayTimeMatch){
     const dayName=dayTimeMatch[1].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     const time=dayTimeMatch[2];
     const dayIdx=DAY_MAP[dayName]||DAY_MAP[dayTimeMatch[1].toLowerCase()];
-
     if(dayIdx!==undefined){
-      // Find next occurrence of that day
       const now=new Date();
       const todayIdx=now.getDay();
       let daysAhead=dayIdx-todayIdx;
       if(daysAhead<0) daysAhead+=7;
-      if(daysAhead===0) daysAhead=7; // next week if same day
+      if(daysAhead===0) daysAhead=7;
       const target=new Date(now);
       target.setDate(now.getDate()+daysAhead);
       const dateLabel=target.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
       const fullLabel=dayTimeMatch[1].charAt(0).toUpperCase()+dayTimeMatch[1].slice(1)+' '+time;
-    infoDiv.style.display='block';
-  infoDiv.innerHTML='📅 Detectado: <b>'+labelStr+'</b> ('+dayPart+')';
-  infoDiv._detected={label:labelStr, createdDate:parsed.dateLabel, savedAt:parsed.dateObj.toISOString()};
-  applyDetectedLabel();
+      infoDiv.style.display='block';
+      infoDiv.innerHTML='Detectado: <b>'+fullLabel+'</b> ('+dateLabel+')';
+      infoDiv._detected={label:time, createdDate:target.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}), savedAt:target.toISOString()};
+      return;
     }
+  }
+  if(timeOnlyMatch){
+    const time=timeOnlyMatch[1];
+    const now=new Date();
+    const dateLabel=now.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+    infoDiv.style.display='block';
+    infoDiv.innerHTML='Detectado: <b>'+time+'</b> ('+dateLabel+')';
+    infoDiv._detected={label:time, createdDate:now.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}), savedAt:now.toISOString()};
+    return;
   }
   infoDiv.style.display='none';
   infoDiv._detected=null;
 }
-
 function goSetup(){
   const text = document.getElementById('lista').value;
   const parsed = parseInput(text);
@@ -1563,19 +1583,35 @@ function closeConfirm(e){
 }
 
 // ── MODAL ──
-function openModal(title, value, sub, cb){
+function openModal(title, value, sub, cb, multiline){
   modalCb=cb;
   document.getElementById('modal-title').textContent=title;
-  document.getElementById('modal-input').value=value;
-  const subEl=document.getElementById('modal-sub');
-  if(sub){subEl.textContent=sub;subEl.style.display='block';}
-  else{subEl.style.display='none';}
+  const inp=document.getElementById('modal-input');
+  const ta=document.getElementById('modal-textarea');
+  if(multiline){
+    inp.style.display='none';
+    ta.style.display='block';
+    ta.value=value||'';
+    ta.placeholder=sub||'';
+    document.getElementById('modal-sub').style.display='none';
+    setTimeout(()=>ta.focus(),80);
+  } else {
+    ta.style.display='none';
+    inp.style.display='block';
+    inp.value=value||'';
+    const subEl=document.getElementById('modal-sub');
+    if(sub){subEl.textContent=sub;subEl.style.display='block';}
+    else{subEl.style.display='none';}
+    setTimeout(()=>inp.select(),80);
+  }
   document.getElementById('modal').style.display='flex';
-  setTimeout(()=>document.getElementById('modal-input').select(),80);
 }
 function modalOk(){
-  const val=document.getElementById('modal-input').value;
+  const inp=document.getElementById('modal-input');
+  const ta=document.getElementById('modal-textarea');
+  const val=inp.style.display!=='none'?inp.value:ta.value;
   document.getElementById('modal').style.display='none';
+  inp.style.display='block'; ta.style.display='none';
   if(modalCb){modalCb(val);modalCb=null;}
 }
 function closeModal(e){
@@ -1765,9 +1801,9 @@ function promptAddManualDebt(){
     },200);
   });
 }
-function addDebt(playerName, sessionLabel, amount){
+function addDebt(playerName, sessionLabel, amount, campo){
   const debts=loadDebts();
-  debts.push({ id:uid(), name:playerName, session:sessionLabel, date:new Date().toLocaleDateString('es-ES'), paid:false });
+  debts.push({ id:uid(), name:playerName, session:sessionLabel, date:new Date().toLocaleDateString('es-ES'), paid:false, amount:amount||null, campo:campo||null });
   saveDebts(debts);
 }
 
@@ -1800,9 +1836,11 @@ function makeDebtRow(d){
   row.style.cssText='display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e0e4ea;border-radius:8px;padding:10px 12px;margin-bottom:6px;';
   const info=document.createElement('div');info.style.cssText='flex:1;';
   const paidInfo=d.paid?(' · pagado '+d.paidDate):'';
-  const commentLine=d.comment?('<div style="font-size:10px;color:#8b949e;font-family:Barlow,sans-serif;margin-top:2px;">💬 '+d.comment+'</div>'):'';
-  info.innerHTML='<div style="font-size:14px;font-weight:700;color:'+(d.paid?'#16a34a':'#dc2626')+';">'+cap(d.name)+(d.manual?' <span style="font-size:9px;background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;">MANUAL</span>':'')+' </div>'
-    +'<div style="font-size:11px;color:#64748b;font-family:Barlow,sans-serif;">'+d.session+' · '+d.date+paidInfo+'</div>'+commentLine;
+  const commentLine=d.comment?('<div style="font-size:10px;color:#8b949e;font-family:Barlow,sans-serif;margin-top:2px;">'+d.comment+'</div>'):'';
+  const amountBadge=d.amount!=null?(' <span style="font-size:11px;font-weight:800;color:'+(d.paid?'#16a34a':'#ef5350')+';">'+d.amount+'€</span>'):'';
+  const campoLine=d.campo?('<div style="font-size:10px;color:#7c3aed;font-family:Barlow,sans-serif;margin-top:1px;">'+d.campo+'</div>'):'';
+  info.innerHTML='<div style="font-size:14px;font-weight:700;color:'+(d.paid?'#16a34a':'#dc2626')+';">'+cap(d.name)+(d.manual?' <span style="font-size:9px;background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;">MANUAL</span>':'')+amountBadge+'</div>'
+    +'<div style="font-size:11px;color:#64748b;font-family:Barlow,sans-serif;">'+d.session+' · '+d.date+paidInfo+'</div>'+campoLine+commentLine;
   const btn=document.createElement('button');
   btn.style.cssText='padding:5px 12px;border-radius:6px;border:1.5px solid '+(d.paid?'#30363d':'#66bb6a55')+';color:'+(d.paid?'#555':'#66bb6a')+';font-size:11px;font-family:Barlow,sans-serif;background:none;cursor:pointer;';
   btn.textContent=d.paid?'💬 COMENTARIO':'MARCAR PAGADO';
@@ -1853,69 +1891,58 @@ function renderHome(){
   const closedSection=document.getElementById('home-closed-section');
   if(!activeList) return;
   activeList.innerHTML=''; closedList.innerHTML='';
+  if(closedSection) closedSection.style.display='none';
 
-  const active=sessions.map((ses,i)=>({ses,i})).filter(({ses})=>!ses.closed);
-  const closed=sessions.map((ses,i)=>({ses,i})).filter(({ses})=>!!ses.closed);
-
-  // Active sessions
-  if(!active.length){
-    activeList.innerHTML='<div style="color:#94a3b8;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:12px 0;">Sin partidos activos</div>';
-  } else {
-    // Group active by creation date
-    const aByDate={};const aDateOrder=[];
-    active.forEach(({ses,i})=>{
-      const d=ses.createdDate||
-        (ses.savedAt?new Date(ses.savedAt).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'Hoy');
-      if(!aByDate[d]){aByDate[d]=[];aDateOrder.push(d);}
-      aByDate[d].push({ses,i});
-    });
-    aDateOrder.sort((a,b)=>{
-      const da=active.find(({ses})=>(ses.createdDate||'')===a);
-      const db=active.find(({ses})=>(ses.createdDate||'')===b);
-      const ta=da?new Date(da.ses.savedAt||0):new Date(0);
-      const tb=db?new Date(db.ses.savedAt||0):new Date(0);
-      return tb-ta;
-    });
-    aDateOrder.forEach(date=>{
-      const dateEl=document.createElement('div');
-      dateEl.style.cssText='font-size:10px;color:#1565c0;font-family:Barlow,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:8px 0 5px;font-weight:700;';
-      dateEl.textContent=date;
-      activeList.appendChild(dateEl);
-      aByDate[date].forEach(({ses,i})=>activeList.appendChild(makeSessionCard(ses,i,false)));
-    });
+  if(!sessions.length){
+    activeList.innerHTML='<div style="color:#94a3b8;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:12px 0;">Sin partidos</div>';
+    return;
   }
 
-  // Closed sessions grouped by date
-  if(!closed.length){
-    closedSection.style.display='none';
-  } else {
-    closedSection.style.display='block';
-    const byDate={};const byDateOrder=[];
-    closed.forEach(({ses,i})=>{
-      // Group by CREATION date (the day the match was for), not close date
-      const d=ses.createdDate||
-        (ses.savedAt?new Date(ses.savedAt).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'Sin fecha');
-      if(!byDate[d]){byDate[d]=[];byDateOrder.push(d);}
-      byDate[d].push({ses,i});
-    });
-    // Sort dates newest first
-    byDateOrder.sort((a,b)=>{
-      const da=closed.find(({ses})=>(ses.createdDate||'')===a);
-      const db=closed.find(({ses})=>(ses.createdDate||'')===b);
-      const ta=da?new Date(da.ses.savedAt||0):new Date(0);
-      const tb=db?new Date(db.ses.savedAt||0):new Date(0);
-      return tb-ta;
-    });
-    byDateOrder.forEach(date=>{
-      const dateEl=document.createElement('div');
-      dateEl.style.cssText='font-size:10px;color:#94a3b8;font-family:Barlow,sans-serif;letter-spacing:1px;text-transform:uppercase;margin:8px 0 5px;';
-      dateEl.textContent=date;
-      closedList.appendChild(dateEl);
-      byDate[date].forEach(({ses,i})=>closedList.appendChild(makeSessionCard(ses,i,true)));
-    });
-  }
+  // Group ALL sessions by date (past, present, future)
+  const byDate={};
+  const dateToSavedAt={};
+  sessions.forEach((ses,i)=>{
+    const d=ses.createdDate||
+      (ses.savedAt?new Date(ses.savedAt).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'Sin fecha');
+    if(!byDate[d]) byDate[d]=[];
+    byDate[d].push({ses,i});
+    const t=ses.savedAt?new Date(ses.savedAt).getTime():0;
+    if(!dateToSavedAt[d]||t>dateToSavedAt[d]) dateToSavedAt[d]=t;
+  });
+
+  const today=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const nowTs=Date.now();
+
+  // Sort dates: future first, then today, then past
+  const dateOrder=Object.keys(byDate).sort((a,b)=>(dateToSavedAt[b]||0)-(dateToSavedAt[a]||0));
+
+  dateOrder.forEach(date=>{
+    const isToday=date===today;
+    const isFuture=(dateToSavedAt[date]||0)>nowTs;
+    const prefix=isFuture?'PROXIMO: ':isToday?'HOY: ':'';
+    const colorStr=isFuture?'color:#7c3aed;':(isToday?'color:#1565c0;':'color:#94a3b8;');
+    // Calc day total revenue if eye is active
+    let dayRev=null;
+    if(homeRevVisible){
+      dayRev=0;
+      byDate[date].forEach(({ses})=>{ if(ses.revenue!=null) dayRev+=ses.revenue; });
+    }
+    const dateRow=document.createElement('div');
+    dateRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin:10px 0 5px;';
+    const dateEl=document.createElement('div');
+    dateEl.style.cssText='font-size:10px;font-family:Barlow,sans-serif;letter-spacing:1px;text-transform:uppercase;font-weight:700;'+colorStr;
+    dateEl.textContent=prefix+date;
+    dateRow.appendChild(dateEl);
+    if(homeRevVisible&&dayRev!==null&&dayRev>0){
+      const revEl=document.createElement('div');
+      revEl.style.cssText='font-size:13px;font-weight:800;color:#66bb6a;font-family:Barlow Condensed,sans-serif;';
+      revEl.textContent=dayRev.toFixed(0)+'€ total';
+      dateRow.appendChild(revEl);
+    }
+    activeList.appendChild(dateRow);
+    byDate[date].forEach(({ses,i})=>activeList.appendChild(makeSessionCard(ses,i,!!ses.closed)));
+  });
 }
-
 function makeSessionCard(ses,i,isClosed){
   if(!ses) return document.createElement('div');
   const all=ses.teams?ses.teams.flatMap(t=>t.players):[];
@@ -1948,11 +1975,15 @@ function makeSessionCard(ses,i,isClosed){
 
   const info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
   const closedDate=isClosed&&ses.closedAt?new Date(ses.closedAt).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
+  // Format display: if label is just HH:MM, also show date
+  const cardDateStr=ses.createdDate?ses.createdDate.split(' de ').slice(0,2).join(' '):'';
+  const campoStr=ses.campo?' · '+ses.campo:'';
   info.innerHTML='<div style="font-size:15px;font-weight:800;color:'+(isClosed?'#94a3b8':'#1e293b')+';font-family:Barlow Condensed,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+ses.label
     +(isClosed?' <span style="font-size:9px;background:#f1f5f9;color:#94a3b8;padding:1px 5px;border-radius:4px;">CERRADO'+(closedDate?' '+closedDate:'')+'</span>'
              :' <span style="font-size:9px;background:#dbeafe;color:#1565c0;padding:1px 5px;border-radius:4px;">ACTIVO</span>')+'</div>'
     +'<div style="font-size:10px;color:#94a3b8;font-family:Barlow,sans-serif;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-    +(ses.teams?ses.teams.map(t=>t.name).join(' · '):'Sin equipos')+'</div>';
+    +(ses.teams?ses.teams.map(t=>t.name).join(' · '):'Sin equipos')
+    +(ses.campo?'<span style="color:#7c3aed;margin-left:4px;">· '+ses.campo+'</span>':'')+'</div>';
 
   const statsDiv=document.createElement('div');
   statsDiv.style.cssText='text-align:right;flex-shrink:0;';
@@ -1985,29 +2016,76 @@ function makeSessionCard(ses,i,isClosed){
 
 // ── BACKUP ──
 function exportBackup(){
-  const data={
-    sessions: sessions,
-    debts: loadDebts(),
-    exportedAt: new Date().toISOString(),
-    version: 'cryssports-v61'
-  };
-  const json=JSON.stringify(data, null, 2);
-  const date=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
-  const filename='cryssports-backup-'+date+'.json';
-  // Try download, fallback to new tab
-  try {
+  const debts=loadDebts();
+  const total=sessions.length;
+  const closed=sessions.filter(s=>s.closed).length;
+  const active=total-closed;
+  const pendingDebts=debts.filter(d=>!d.paid).length;
+  const date=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  const msg=date+'\n\n'
+    +'Partidos activos: '+active+'\n'
+    +'Partidos cerrados: '+closed+'\n'
+    +'Deudas pendientes: '+pendingDebts+'\n\n'
+    +'¿Descargar copia de seguridad?';
+  openConfirm('GUARDAR COPIA', msg, ()=>{
+    const data={sessions,debts,exportedAt:new Date().toISOString(),version:'cryssports-v63'};
+    const json=JSON.stringify(data,null,2);
+    const dateStr=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
+    const filename='cryssports-'+dateStr+'.json';
+    try{
+      const blob=new Blob([json],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.download=filename; a.href=url;
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+    }catch(e){
+      const win=window.open('','_blank');
+      if(win){win.document.write('<pre>'+json+'</pre>');win.document.title=filename;}
+    }
+    // Save last backup date
+    localStorage.setItem('cryssports_last_backup', new Date().toISOString());
+    checkBackupReminder();
+  });
+}
+
+function checkBackupReminder(){
+  const last=localStorage.getItem('cryssports_last_backup');
+  const rem=document.getElementById('backup-reminder');
+  const txt=document.getElementById('backup-reminder-text');
+  if(!rem) return;
+  if(!last){
+    rem.style.display='flex';
+    if(txt) txt.textContent='💾 Aún no tienes ninguna copia guardada';
+    return;
+  }
+  const daysSince=Math.floor((Date.now()-new Date(last).getTime())/(1000*60*60*24));
+  if(daysSince>=7){
+    rem.style.display='flex';
+    if(txt) txt.textContent='⚠ Hace '+daysSince+' días de tu última copia ('+new Date(last).toLocaleDateString('es-ES')+')';
+  } else {
+    rem.style.display='none';
+  }
+}
+
+function emailBackup(){
+  const data={sessions,debts:loadDebts(),exportedAt:new Date().toISOString()};
+  const json=JSON.stringify(data,null,2);
+  const date=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const subject='CrysSports Backup '+date;
+  const body='Adjunta el archivo de copia de seguridad.\n\nResumen:\nPartidos: '+sessions.length+'\nDeudas pendientes: '+data.debts.filter(d=>!d.paid).length+'\n\n---\nDatos JSON (copia esto si no puedes adjuntar el archivo):\n\n'+json.substring(0,500)+'...';
+  // Open mail app — on mobile this opens the default email app
+  window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  // Also trigger download so they can attach it
+  setTimeout(()=>{
     const blob=new Blob([json],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    a.download=filename; a.href=url;
+    a.download='cryssports-'+date.replace(/\//g,'-')+'.json';
+    a.href=url;
     document.body.appendChild(a); a.click();
-    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },1000);
-  } catch(e) {
-    // Fallback: open in new tab
-    const win=window.open('','_blank');
-    win.document.write('<pre>'+json+'</pre>');
-    win.document.title=filename;
-  }
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  },500);
 }
 
 function importBackup(){
