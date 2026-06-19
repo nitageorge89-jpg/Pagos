@@ -323,6 +323,8 @@ textarea{color:#1e293b;}
         <button onclick="showScreen('input')" style="background:#1565c0;border:none;color:#fff;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;">+ NUEVO</button>
       </div>
     </div>
+    <!-- Auto backup status -->
+    <div style="font-size:10px;color:#94a3b8;font-family:Barlow,sans-serif;text-align:right;margin:-4px 0 6px;" id="auto-backup-ts"></div>
     <!-- Backup reminder -->
     <div id="backup-reminder" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <div style="font-size:12px;color:#92400e;font-family:Barlow,sans-serif;flex:1;" id="backup-reminder-text">⚠ Recuerda hacer copia de seguridad</div>
@@ -385,7 +387,26 @@ function st(){ return session().state; }
 // ── SAVE / LOAD ──
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({sessions, curIdx})); }catch(e){}
+  autoBackup();
   flash();
+}
+
+function autoBackup(){
+  try{
+    const data={sessions, debts:loadDebts(), exportedAt:new Date().toISOString()};
+    localStorage.setItem('cryssports_auto_backup', JSON.stringify(data));
+    localStorage.setItem('cryssports_auto_backup_ts', new Date().toISOString());
+    updateAutoBackupLabel();
+  }catch(e){}
+}
+
+function updateAutoBackupLabel(){
+  const el=document.getElementById('auto-backup-ts');
+  if(!el) return;
+  const ts=localStorage.getItem('cryssports_auto_backup_ts');
+  if(!ts){ el.textContent=''; return; }
+  const d=new Date(ts);
+  el.textContent='Auto: '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+' · '+d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
 }
 function loadAll(){
   try{
@@ -534,6 +555,45 @@ function switchSession(idx){
   save();
 }
 
+function tabLongPress(i, label){
+  // Show a simple action sheet via confirm modal
+  const modal=document.getElementById('confirm-modal');
+  const title=document.getElementById('confirm-title');
+  const msg=document.getElementById('confirm-msg');
+  const btns=document.getElementById('confirm-btns');
+  title.textContent='PESTAÑA: '+label;
+  msg.textContent='';
+  btns.innerHTML='';
+  // Rename
+  const renBtn=document.createElement('button');
+  renBtn.className='modal-ok';
+  renBtn.style.cssText='flex:1;background:transparent;border:1.5px solid #1565c0;color:#1565c0;font-size:12px;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:.5px;padding:10px;border-radius:7px;cursor:pointer;';
+  renBtn.textContent='RENOMBRAR';
+  renBtn.onclick=()=>{ modal.style.display='none'; renameSession(i); };
+  btns.appendChild(renBtn);
+  // Delete
+  const delBtn=document.createElement('button');
+  delBtn.style.cssText='flex:1;background:transparent;border:1.5px solid #ef4444;color:#ef4444;font-size:12px;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:.5px;padding:10px;border-radius:7px;cursor:pointer;';
+  delBtn.textContent='ELIMINAR';
+  delBtn.onclick=()=>{
+    modal.style.display='none';
+    openConfirm('ELIMINAR PARTIDO',label+' — se eliminará sin guardar deudas.',()=>{
+      sessions.splice(i,1);
+      if(!sessions.length){ sessions=[newSession(fmtNow())]; }
+      curIdx=Math.min(curIdx,sessions.length-1);
+      save();renderTabs();switchSession(curIdx);
+    });
+  };
+  btns.appendChild(delBtn);
+  // Cancel
+  const cancelBtn=document.createElement('button');
+  cancelBtn.className='modal-cancel';
+  cancelBtn.textContent='CANCELAR';
+  cancelBtn.onclick=()=>{ modal.style.display='none'; };
+  btns.appendChild(cancelBtn);
+  modal.style.display='flex';
+}
+
 function renderTabs(){
   const bar = document.getElementById('tabs-bar');
   // remove old tabs
@@ -549,15 +609,31 @@ function renderTabs(){
     btn.className = 'tab-btn'+(i===curIdx?' active':'');
     btn.textContent = ses.label||'Partido';
     btn.onclick = ()=>switchSession(i);
-    btn.addEventListener('contextmenu', e=>{ e.preventDefault(); renameSession(i); });
+    // Long press: tab options
+    let pressTimer=null;
+    btn.addEventListener('contextmenu', e=>{ e.preventDefault(); tabLongPress(i,ses.label); });
+    btn.addEventListener('touchstart', e=>{
+      pressTimer=setTimeout(()=>{ pressTimer=null; tabLongPress(i,ses.label); },600);
+    });
+    btn.addEventListener('touchend', ()=>{ if(pressTimer){clearTimeout(pressTimer);pressTimer=null;} });
+    btn.addEventListener('touchmove', ()=>{ if(pressTimer){clearTimeout(pressTimer);pressTimer=null;} });
     bar.insertBefore(btn, addBtn);
   });
 }
 
 function renameSession(idx){
   openModal('RENOMBRAR', sessions[idx].label, '', name=>{
-    if(name.trim()) sessions[idx].label = name.trim();
-    save(); renderTabs();
+    if(!name.trim()) return;
+    const now=new Date();
+    const parsed=parseLabelDate(name.trim(), now);
+    const timeMatch=name.trim().match(/(\d{1,2}:\d{2})/);
+    sessions[idx].label=timeMatch?timeMatch[1]:name.trim();
+    sessions[idx].createdDate=parsed.dateLabel;
+    sessions[idx].savedAt=parsed.dateObj.toISOString();
+    sortSessionsByTime();
+    curIdx=sessions.findIndex(s=>s.id===sessions[idx].id);
+    if(curIdx<0) curIdx=0;
+    save(); renderTabs(); renderHome();
   });
 }
 
@@ -638,10 +714,30 @@ function finalizeSession(){
         if(t.players.length>0 && (t.rivalCount||0)>0 && st()['__rival_rem_'+ti]) rivalPaid+=(t.rivalCount||0)-t.players.length;
       });
       const rev=paidBase*base+paidHot*hotP+rivalPaid*base;
-      // Add debts
+      // Add debts — individual unpaid players
       const sesBase=session().priceBase||5;
       const sesCampo=session().campo||null;
       unpaidNames.forEach(name=>addDebt(name,label,sesBase,sesCampo));
+      // Add team-level debts: teams with no individual players that weren't marked as paid/free
+      teams().forEach((t,ti)=>{
+        if(!t.name) return;
+        if(t.players.length===0){
+          // Whole team with no individual names
+          const tState=st()['__team_'+ti];
+          if(!tState){ // not paid, not free
+            const n=t.rivalCount||0;
+            const teamDebtAmt=n>0?n*sesBase:null;
+            addDebt('Equipo: '+t.name, label, teamDebtAmt, sesCampo);
+          }
+        } else {
+          // Has individual players — check if any remaining (ghost) slots are unpaid
+          const remCount=(t.rivalCount||0)-t.players.length;
+          if(remCount>0 && !st()['__rival_rem_'+ti]){
+            const remDebtAmt=remCount*sesBase;
+            addDebt('Equipo: '+t.name+' ('+remCount+' sin pagar)', label, remDebtAmt, sesCampo);
+          }
+        }
+      });
       // Mark closed — DO NOT delete
       session().closed=true;
       session().revenue=rev;
@@ -1236,7 +1332,18 @@ function buildTeamBlock(ti){
     pl.appendChild(emptyDiv);
   } else if(team.players.length > 0 && (team.rivalCount||0) > 0){
     // Has manual players + rival count
-    team.players.forEach((p,pi)=>pl.appendChild(makePlayerRow(p,pi+1,ti,s)));
+    const nameCounts2={};
+    team.players.forEach(p=>{ const n=(p.name||'').trim().toLowerCase(); nameCounts2[n]=(nameCounts2[n]||0)+1; });
+    team.players.forEach((p,pi)=>{
+      const row=makePlayerRow(p,pi+1,ti,s);
+      const isDup2=(nameCounts2[(p.name||'').trim().toLowerCase()]||0)>1;
+      if(isDup2){
+        row.style.outline='2px solid #f59e0b';
+        const warn=document.createElement('span');warn.textContent=' ⚠';warn.style.cssText='color:#f59e0b;font-size:13px;font-weight:900;';
+        const nameEl=row.querySelector('.p-name');if(nameEl) nameEl.appendChild(warn);
+      }
+      pl.appendChild(row);
+    });
     const remCount=(team.rivalCount||0) - team.players.length;
     const remState=session().state['__rival_rem_'+ti];
     if(remCount > 0){
@@ -1281,7 +1388,23 @@ function buildTeamBlock(ti){
       }
     }
   } else {
-    team.players.forEach((p,pi)=>pl.appendChild(makePlayerRow(p,pi+1,ti,s)));
+    // Check for duplicate names
+    const nameCounts={};
+    team.players.forEach(p=>{ const n=(p.name||'').trim().toLowerCase(); nameCounts[n]=(nameCounts[n]||0)+1; });
+    team.players.forEach((p,pi)=>{
+      const row=makePlayerRow(p,pi+1,ti,s);
+      const isDup=(nameCounts[(p.name||'').trim().toLowerCase()]||0)>1;
+      if(isDup){
+        row.style.outline='2px solid #f59e0b';
+        row.title='Nombre repetido';
+        const warn=document.createElement('span');
+        warn.textContent=' ⚠';
+        warn.style.cssText='color:#f59e0b;font-size:13px;font-weight:900;';
+        const nameEl=row.querySelector('.p-name');
+        if(nameEl) nameEl.appendChild(warn);
+      }
+      pl.appendChild(row);
+    });
   }
   block.appendChild(pl);
   return block;
@@ -1679,74 +1802,62 @@ function updateGlobal(){
 }
 function updateSummary(){
   const bar=document.getElementById('summary-bar');
-  const pres=teams().flatMap(t=>t.players).filter(p=>st()[p.id]===1);
-  const absentPlayers=teams().flatMap(t=>t.players).filter(p=>!st()[p.id]);
-  // Rival teams unpaid
-  const rivalPending=[];
+  // Build pending per team: named unpaid players + anonymous remaining slots
+  const teamPending=[];
   teams().forEach((t,ti)=>{
+    const items=[]; // {label, id or null, isSlot}
     if(t.players.length===0){
-      const n=t.rivalCount||0;
-      const paid=st()['__team_'+ti];
-      if(!paid){
-        if(n>0) rivalPending.push({name:t.name,count:n});
-        else rivalPending.push({name:t.name,count:'?'}); // named team, count unknown
+      // No individual players — whole team is a block
+      const tState=st()['__team_'+ti];
+      if(!tState){
+        const n=t.rivalCount||0;
+        items.push({label:n>0?n+' jug':'? jug', isSlot:true, ti});
+      }
+    } else {
+      // Individual players — show unpaid ones
+      t.players.forEach(p=>{
+        const s=st()[p.id]||0;
+        if(s<2) items.push({label:(p.name?cap(p.name):'Plaza')+(s===1?' ✋':' ⏳'), id:p.id, isSlot:false, ti});
+      });
+      // Also show anonymous remaining slots if not paid
+      const remCount=(t.rivalCount||0)-t.players.length;
+      const remState=st()['__rival_rem_'+ti];
+      if(remCount>0 && !remState){
+        items.push({label:remCount+' jug', isSlot:true, ti});
       }
     }
+    if(items.length) teamPending.push({team:t, ti, items});
   });
-  if(!pres.length && !absentPlayers.length && !rivalPending.length){bar.style.display='none';return;}
+
+  if(!teamPending.length){bar.style.display='none';return;}
   bar.style.display='block';bar.innerHTML='';
-  // Title
+
   const mainTitle=document.createElement('div');
   mainTitle.style.cssText='font-size:11px;color:#ef5350;font-family:Barlow,sans-serif;letter-spacing:1px;font-weight:700;margin-bottom:8px;';
-  mainTitle.textContent='⚠ PENDIENTES DE COBRO — pulsa para ir al jugador';
+  mainTitle.textContent='PENDIENTES DE COBRO';
   bar.appendChild(mainTitle);
-  // All unpaid (absent + present) grouped by team
-  if(pres.length || absentPlayers.length){
-    teams().forEach((t,ti)=>{
-      const unpaid=t.players.filter(p=>{const s=st()[p.id]||0;return s<2;});
-      if(!unpaid.length) return;
-      const teamLabel=document.createElement('div');
-      teamLabel.style.cssText='font-size:9px;color:#8b949e;font-family:Barlow,sans-serif;letter-spacing:1px;margin:6px 0 3px;';
-      teamLabel.textContent=t.name.toUpperCase();
-      bar.appendChild(teamLabel);
-      const names=document.createElement('div');names.className='sum-names';
-      unpaid.forEach(p=>{
-        const s=st()[p.id]||0;
-        const ch=document.createElement('div');ch.className='sum-chip';
-        ch.style.cssText='background:'+(s===1?'#1565c030':'#ffffff10')+';border:1px solid '+(s===1?'#4fc3f7':'#444')+';color:'+(s===1?'#e0f0ff':'#aaa')+';font-weight:600;cursor:pointer;';
-        ch.textContent=(p.name?cap(p.name):'Plaza')+(s===1?' ✋':' ⏳');
-        ch.onclick=()=>{
-          const el=document.getElementById('prow-'+p.id);
-          if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
-        };
-        names.appendChild(ch);
-      });
-      bar.appendChild(names);
-    });
-  }
-  if(rivalPending.length){
-    const rTitle=document.createElement('div');
-    rTitle.style.cssText='font-size:9px;color:#ffb74d;font-family:Barlow,sans-serif;letter-spacing:1px;margin-top:8px;margin-bottom:4px;';
-    rTitle.textContent='EQUIPOS SIN COBRAR';
-    bar.appendChild(rTitle);
-    const rNames=document.createElement('div');rNames.className='sum-names';
-    rivalPending.forEach(r=>{
+
+  teamPending.forEach(({team,ti,items})=>{
+    const teamLabel=document.createElement('div');
+    teamLabel.style.cssText='font-size:9px;color:#8b949e;font-family:Barlow,sans-serif;letter-spacing:1px;margin:6px 0 3px;';
+    teamLabel.textContent=team.name.toUpperCase();
+    bar.appendChild(teamLabel);
+    const names=document.createElement('div');names.className='sum-names';
+    items.forEach(item=>{
       const ch=document.createElement('div');ch.className='sum-chip';
-      ch.style.cssText='background:#ffb74d18;border:1px solid #ffb74d66;color:#b45309;font-weight:600;cursor:default;';
-      ch.textContent=r.name+' ('+r.count+' ⏳)';
-      // Find team index and scroll to it
-      const rTi=teams().findIndex(t=>t.name===r.name);
-      if(rTi>=0){
-        ch.style.cursor='pointer';
-        ch.onclick=()=>{
-          const el=document.getElementById('tblock-'+rTi);
-          if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
-        };
+      if(item.isSlot){
+        ch.style.cssText='background:#ffb74d18;border:1px solid #ffb74d66;color:#b45309;font-weight:700;cursor:pointer;';
+        ch.onclick=()=>{ const el=document.getElementById('tblock-'+item.ti); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); };
+      } else {
+        const s=st()[item.id]||0;
+        ch.style.cssText='background:'+(s===1?'#1565c030':'#ffffff10')+';border:1px solid '+(s===1?'#4fc3f7':'#444')+';color:'+(s===1?'#e0f0ff':'#aaa')+';font-weight:600;cursor:pointer;';
+        ch.onclick=()=>{ const el=document.getElementById('prow-'+item.id); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); };
       }
-      rNames.appendChild(ch);
+      ch.textContent=item.label;
+      names.appendChild(ch);
     });
-    bar.appendChild(rNames);
-  }
+    bar.appendChild(names);
+  });
 }
 
 // ── SHUFFLE ──
@@ -2052,6 +2163,7 @@ function exportBackup(){
 }
 
 function checkBackupReminder(){
+  updateAutoBackupLabel();
   const last=localStorage.getItem('cryssports_last_backup');
   const rem=document.getElementById('backup-reminder');
   const txt=document.getElementById('backup-reminder-text');
@@ -2091,6 +2203,28 @@ function emailBackup(){
 }
 
 function importBackup(){
+  // If auto-backup exists, offer to restore from it first
+  const autoRaw=localStorage.getItem('cryssports_auto_backup');
+  const autoTs=localStorage.getItem('cryssports_auto_backup_ts');
+  if(autoRaw&&autoTs){
+    const tsStr=new Date(autoTs).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    openConfirm('RESTAURAR','Auto-guardado: '+tsStr+'\n¿Restaurar desde auto-guardado o desde archivo?',()=>{
+      // Restore from auto-backup
+      try{
+        const data=JSON.parse(autoRaw);
+        if(data.sessions){
+          data.sessions.forEach(s=>{ if(!sessions.find(x=>x.id===s.id)) sessions.push(s); });
+          if(data.debts){ const ex=loadDebts(); saveDebts([...ex,...data.debts.filter(d=>!ex.find(e=>e.id===d.id))]); }
+          sortSessionsByTime(); save(); renderTabs(); showScreen('home');
+        }
+      }catch(e){ alert('Error: '+e.message); }
+    }, ()=>importFromFile(), 'AUTO-GUARDADO', 'DESDE ARCHIVO');
+    return;
+  }
+  importFromFile();
+}
+
+function importFromFile(){
   const input=document.createElement('input');
   input.type='file'; input.accept='.json,.txt';
   document.body.appendChild(input);
@@ -2103,7 +2237,6 @@ function importBackup(){
         const data=JSON.parse(ev.target.result);
         if(data.sessions&&Array.isArray(data.sessions)){
           openConfirm('RESTAURAR COPIA','Se importarán '+data.sessions.length+' partidos. Los datos actuales se conservan.',()=>{
-            // Merge: add imported sessions that don't already exist
             data.sessions.forEach(s=>{ if(!sessions.find(x=>x.id===s.id)) sessions.push(s); });
             if(data.debts){ const existing=loadDebts(); const merged=[...existing,...data.debts.filter(d=>!existing.find(e=>e.id===d.id))]; saveDebts(merged); }
             sortSessionsByTime(); save(); renderTabs(); showScreen('home');
@@ -2126,6 +2259,7 @@ function init(){
   }
   sortSessionsByTime();
   renderTabs();
+  updateAutoBackupLabel();
   const ses=session();
   if(ses.screen==='match'){ renderMatch(); showScreen('match'); }
   else if(ses.screen==='setup'){ renderSetup(); showScreen('setup'); }
